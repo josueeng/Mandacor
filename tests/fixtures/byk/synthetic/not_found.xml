@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SYNTHETIC_TEST_DATA -->
+<CommandResult Id="42" Name="RetrieveMeasurement"><Data><DataValueCollection><String Name="Result" Value="NOK" Description="Synthetic measurement does not exist"/></DataValueCollection></Data></CommandResult>
+

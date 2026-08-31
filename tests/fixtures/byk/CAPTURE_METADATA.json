@@ -1,0 +1,96 @@
+{
+  "captured_at": "2026-08-30T00:51:54.395359+00:00",
+  "discovery_source_ip": "192.168.1.13",
+  "discovery_source_port": 6002,
+  "evidence": "REAL_CAPTURE",
+  "files": [
+    {
+      "path": "tests/fixtures/byk/discovery/BYKQUERY.bin",
+      "sha256": "64309df2068ac4b51a4edf92ff32dd311be22394e4a416e80c6117de5237b858",
+      "size": 22
+    },
+    {
+      "path": "tests/fixtures/byk/discovery/BYKINSTRUMENT.bin",
+      "sha256": "c63b629736053a6ecfa9cd95f744d54cf06c038cb28f07bc9aaec77adb816a0e",
+      "size": 104
+    },
+    {
+      "path": "tests/fixtures/byk/tcp/get_instrument_info_request.bin",
+      "sha256": "5a50a3f8c505a26d8ed74ebf27dad560ed3335ebe4e07b8aa00530e464ad5fa6",
+      "size": 135
+    },
+    {
+      "path": "tests/fixtures/byk/tcp/get_instrument_info_response.bin",
+      "sha256": "c763143dcf25ce498a2e5eb39b019c4116f3aa05a12fb1e3f071cc5c9a3a52c0",
+      "size": 675
+    },
+    {
+      "path": "tests/fixtures/byk/xml/get_instrument_info_response.xml",
+      "sha256": "7aeb2e5d6e36da1a57170c8c52ee34d23f371217316abff73f6472d402353dcb",
+      "size": 607
+    },
+    {
+      "path": "tests/fixtures/byk/tcp/measurement_id_list_request.bin",
+      "sha256": "d7321648a3b3dd742817bc3491e781e3c46624d92e6327b4123ae3b0b55b00b4",
+      "size": 145
+    },
+    {
+      "path": "tests/fixtures/byk/tcp/measurement_id_list_response.bin",
+      "sha256": "617bd88bf3633d8e1549829b07911efe7ff4721067ab57b155a74bb2e4e9be0e",
+      "size": 467
+    },
+    {
+      "path": "tests/fixtures/byk/xml/measurement_id_list_response.xml",
+      "sha256": "f6a2a7875f091735abcc10fd9d5f67686abd66223d6cd35f8e86a66347dcc6c0",
+      "size": 399
+    },
+    {
+      "path": "tests/fixtures/byk/tcp/measurement_request.bin",
+      "sha256": "0183eb0f3595263a006b88136bba9bafc9477bbbf1870df8a838439de0652bb9",
+      "size": 238
+    },
+    {
+      "path": "tests/fixtures/byk/tcp/measurement_response.bin",
+      "sha256": "91f235e7bae2a046c4d5d679cd2ca4f97ec756fd34d28f985b9fecb18c3bbb52",
+      "size": 8263
+    },
+    {
+      "path": "tests/fixtures/byk/xml/measurement_response.xml",
+      "sha256": "6f7e694019c5e6cef627da2299b53facf0e7a72f48f7abd1eaedb244c9481aa6",
+      "size": 8195
+    },
+    {
+      "path": "tests/fixtures/byk/measurements/measurement_real.json",
+      "sha256": "7e227c95be433e4ef6dbee2e965beb7bd160a6891cab11e088acb856e06c2cd4",
+      "size": 1038
+    },
+    {
+      "path": "tests/fixtures/byk/frames/measurement_ack.bin",
+      "sha256": "83bebc10eac6c5c15e8fa6a68ba2fc9229ab0cfd8b3f8704c2ccf89371ecec16",
+      "size": 34
+    },
+    {
+      "path": "tests/fixtures/byk/frames/response_header.bin",
+      "sha256": "02982550b0f6534274e74837decec4e25de5507ed11920e6c71c513503838a22",
+      "size": 32
+    },
+    {
+      "path": "tests/fixtures/byk/frames/response_payload.bin",
+      "sha256": "6f7e694019c5e6cef627da2299b53facf0e7a72f48f7abd1eaedb244c9481aa6",
+      "size": 8195
+    },
+    {
+      "path": "tests/fixtures/byk/frames/response_crc.bin",
+      "sha256": "9f9d4270348a763f5807351d522805a38d47ed9caa6f78e3e195889cca575b49",
+      "size": 2
+    }
+  ],
+  "instrument_ip_configured": "192.168.1.13",
+  "local_udp_port": 46501,
+  "measurement_guid": "79bcbeb4-48e5-48cb-9162-6b3a0c26fca9",
+  "measurement_id": 3,
+  "measurement_name": "Sample #3",
+  "measurement_timestamp": "2026-08-27T11:29:13+00:00",
+  "operation": "read-only Gate 0 characterization",
+  "tcp_port": 6000
+}

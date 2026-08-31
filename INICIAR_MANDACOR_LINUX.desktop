@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Iniciar MANDACOR
+Comment=Inicia o backend e mostra o QR Code do Expo
+Exec="/home/josue/Documentos/Projetos/color bank/INICIAR_MANDACOR_LINUX.sh"
+Path=/home/josue/Documentos/Projetos/color bank
+Icon=utilities-terminal
+Terminal=true
+Categories=Development;
+StartupNotify=true

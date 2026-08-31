@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mandacor"
+version = "0.4.0"
+description = "MANDACOR colorimetry instrument platform"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.30,<1",
+]
+
+[project.optional-dependencies]
+test = [
+  "httpx>=0.27,<1",
+  "pytest>=8,<10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-m 'not instrument'"
+markers = [
+  "instrument: read-only tests that require a real BYK instrument",
+  "interactive: test that requires a human action during execution",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
