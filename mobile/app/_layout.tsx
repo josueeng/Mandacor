@@ -3,6 +3,7 @@ import { DarkTheme, ErrorBoundaryProps, router, Stack, ThemeProvider } from 'exp
 import * as SplashScreen from 'expo-splash-screen';
 import { PropsWithChildren, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { AppProvider } from '@/src/state/AppContext';
@@ -57,16 +58,20 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   return (
-    <AppProvider>
-      <StartupGate>
-        <ThemeProvider value={DarkTheme}>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="adjustment" />
-          </Stack>
-        </ThemeProvider>
-      </StartupGate>
-    </AppProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <AppProvider>
+        <StartupGate>
+          <ThemeProvider value={DarkTheme}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="adjustment" />
+              <Stack.Screen name="formula" />
+              <Stack.Screen name="formula-editor" />
+            </Stack>
+          </ThemeProvider>
+        </StartupGate>
+      </AppProvider>
+    </SafeAreaProvider>
   );
 }
 

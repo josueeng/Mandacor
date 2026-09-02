@@ -64,6 +64,12 @@ def _parser() -> argparse.ArgumentParser:
     doctor = commands.add_parser("doctor")
     doctor.add_argument("--pending-file", default="data/pending_adjustment.json")
     doctor.add_argument("--data-dir", default="data")
+    dataset = commands.add_parser("dataset")
+    dataset_actions = dataset.add_subparsers(dest="action", required=True)
+    formula_export = dataset_actions.add_parser("export-formula-training")
+    formula_export.add_argument("--catalog", default="data/formulas.sqlite3")
+    formula_export.add_argument("--output", default="data/ml/formula_spectra.jsonl")
+    formula_export.add_argument("--include-review", action="store_true")
     instrument = commands.add_parser("instrument")
     actions = instrument.add_subparsers(dest="action", required=True)
     actions.add_parser("discover")
@@ -334,6 +340,19 @@ def main() -> int:
         )
         print(format_diagnostics(report))
         return 0 if report.configuration == report.recovery == report.golden == "PASS" else 2
+    if args.group == "dataset" and args.action == "export-formula-training":
+        from mandacor.application.formula_training_dataset import (
+            FormulaTrainingDatasetExporter,
+        )
+        from mandacor.infrastructure.storage.formula_sqlite import SqliteFormulaCatalog
+
+        result = FormulaTrainingDatasetExporter().export(
+            SqliteFormulaCatalog(Path(args.catalog)),
+            Path(args.output),
+            eligible_only=not args.include_review,
+        )
+        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+        return 0
     repository = JsonConfigurationRepository(Path(args.config))
     service = InstrumentService(repository)
     try:

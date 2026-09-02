@@ -10,6 +10,132 @@ export interface HealthResponse {
   recovery_error: string | null;
 }
 
+export type FormulaSystem = 'POLIESTER' | 'PU' | 'LACA' | 'ESMALTE_SINTETICO' | 'EPOXI';
+
+export interface FormulaProductSummary {
+  code: string;
+  display_code: string;
+  description: string;
+  year: string;
+  universal_code: string;
+  nuance: string;
+  manufacturer: string;
+  observations: string;
+  system: FormulaSystem;
+  system_label: string;
+  paint_line: string;
+  finish_code: string;
+  finish_label: string;
+  personalized: boolean;
+  formula_count: number;
+  origin: 'SKYMIX' | 'USER';
+  editable: boolean;
+  reading_count: number;
+}
+
+export interface FormulaComponent {
+  position: number;
+  base_code: string;
+  base_name: string;
+  weight_g: string;
+}
+
+export interface FormulaVariant {
+  formula_id: number;
+  condition: string;
+  package: string;
+  version: number;
+  updated_at: string;
+  total_weight_g: string;
+  components: FormulaComponent[];
+}
+
+export interface FormulaProduct extends FormulaProductSummary {
+  variants: FormulaVariant[];
+}
+
+export interface FormulaSearchResult {
+  items: FormulaProductSummary[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface FormulaSpectralMatch extends FormulaProductSummary {
+  compatibility: number;
+  delta_e: number;
+  matched_reading_id: string;
+  matched_measurement_id: number;
+}
+
+export interface FormulaSpectralMatchResult {
+  items: FormulaSpectralMatch[];
+  total_compared: number;
+}
+
+export interface FormulaSearchFilters {
+  manufacturer?: string;
+  year?: string;
+  finish?: string;
+  universalCode?: string;
+}
+
+export interface FormulaComponentPayload {
+  base_code: string;
+  base_name: string;
+  weight_g: string;
+}
+
+export interface FormulaVariantPayload {
+  condition: string;
+  package: string;
+  version: number;
+  components: FormulaComponentPayload[];
+}
+
+export interface FormulaUpsertPayload {
+  code: string;
+  description: string;
+  year: string;
+  universal_code: string;
+  nuance: string;
+  manufacturer: string;
+  observations: string;
+  system: FormulaSystem;
+  finish_label: string;
+  variants: FormulaVariantPayload[];
+}
+
+export type MetallicGrain = 'FINO' | 'MEDIO_FINO' | 'MEDIO' | 'GROSSEIRO' | 'MUITO_GROSSEIRO';
+
+export interface FormulaReading {
+  reading_id: string;
+  product_code: string;
+  display_code: string;
+  description: string;
+  session_id: string;
+  measurement_role: 'target' | 'sample';
+  formula_id: number | null;
+  metallic_grain: MetallicGrain | null;
+  notes: string;
+  measurement_id: number;
+  measurement_guid: string | null;
+  instrument_serial: string;
+  angles: LabAngle[];
+  created_at: string;
+  schema_version: number;
+  measurement_fingerprint: string | null;
+  quality_status: 'eligible' | 'review' | 'legacy_unverified';
+  quality_issues: string[];
+  capture_context: {
+    color_space?: 'CIELAB';
+    angles_degrees?: RequiredAngle[];
+    illuminant?: string | null;
+    observer?: string | null;
+    measurement_geometry?: string | null;
+  };
+}
+
 export type RemoteState = 'ONLINE' | 'OFFLINE' | 'UNKNOWN';
 
 export interface InstrumentInfo {

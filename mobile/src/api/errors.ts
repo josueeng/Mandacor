@@ -47,6 +47,7 @@ const friendlyMessages: Record<string, string> = {
   CAPTURE_ALREADY_ACTIVE: 'Já existe uma captura ativa nesta sessão.',
   TARGET_REQUIRED: 'Capture a cor alvo antes da amostra.',
   LATEST_MEASUREMENT_ALREADY_SELECTED: 'A última leitura do espectrofotômetro já está selecionada.',
+  FORMULA_READING_ALREADY_SAVED: 'Esta leitura já foi salva no dataset de uma cor.',
   MEASUREMENT_ROLE_CONFLICT: 'A mesma leitura não pode ser usada como alvo e amostra.',
   SESSION_MEASUREMENTS_LOCKED: 'As leituras não podem ser trocadas depois que um ajuste foi registrado.',
   MULTIPLE_INSTRUMENTS: 'Escolha qual instrumento deseja conectar.',

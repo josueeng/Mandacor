@@ -39,13 +39,11 @@ def _trial(*, components=None, visual=VisualResult.UNKNOWN, status=OperatorTrial
 
 
 def test_dataset_has_required_columns_in_deterministic_order():
-    assert MAIN_DATASET_COLUMNS[:7] == (
-        "id_ajuste", "data", "sistema", "finish_type", "base", "cor_veiculo", "volume_tinta_ml"
+    assert MAIN_DATASET_COLUMNS[:11] == (
+        "dataset_schema_version", "id_ajuste", "data", "created_at", "applied_at",
+        "completed_at", "sistema", "finish_type", "base", "cor_veiculo", "volume_tinta_ml"
     )
-    assert MAIN_DATASET_COLUMNS[-7:] == (
-        "session_id", "target_measurement_id", "before_measurement_id",
-        "after_measurement_id", "instrument_serial", "component_count", "learning_eligibility"
-    )
+    assert MAIN_DATASET_COLUMNS[-2:] == ("learning_eligibility", "data_quality_flags")
     assert COMPONENT_DATASET_COLUMNS == ("adjustment_id", "pigment_code", "quantity_g")
 
 
@@ -92,6 +90,9 @@ def test_dataset_has_stable_adjustment_id_and_iso_datetime():
     assert uuid.UUID(row["id_ajuste"]) == trial.adjustment_id
     assert row["data"] == trial.completed_at.isoformat()
     assert row["data"].endswith("+00:00")
+    assert row["dataset_schema_version"] == "mandacor.adjustment-effect.v2"
+    assert row["completed_at"] == row["data"]
+    assert "complete" in row["data_quality_flags"]
 
 
 def test_dataset_does_not_invent_optional_operator_feedback():

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import threading
 import uuid
+import shutil
+from pathlib import Path
 from datetime import datetime, timezone
 
 import pytest
@@ -29,6 +31,7 @@ from mandacor.domain.sessions import ColorSession
 from mandacor.domain.pigments import FinishType, PaintContext, PaintSystem
 from mandacor.infrastructure.instruments.byk.exceptions import InstrumentError, InstrumentTimeoutError
 from mandacor.infrastructure.storage.pending_adjustment_json import JsonPendingAdjustmentRepository
+from mandacor.infrastructure.storage.formula_sqlite import SqliteFormulaCatalog
 
 
 INFO = InstrumentInfo("BYK", "192.168.1.13", "MicroTriColor", "SERIAL-1", "1.0")
@@ -175,6 +178,138 @@ def test_health_returns_200_and_import_does_not_connect(api_bundle):
         assert uuid.UUID(health.headers["X-Request-ID"])
         assert client.get("/api/v1/health").status_code == 200
         assert instrument.connect_calls == []
+
+
+def test_formula_catalog_search_and_detail(api_bundle):
+    with TestClient(api_bundle[2]) as client:
+        search = client.get(
+            "/api/v1/formulas",
+            params={"q": "vermelho fogo scania", "system": "POLIESTER"},
+        )
+        assert search.status_code == 200
+        payload = search.json()
+        assert payload["total"] >= 1
+        assert any(item["code"] == "210009850101" for item in payload["items"])
+        assert any(item["display_code"] == "210-00985" for item in payload["items"])
+
+        commercial = client.get(
+            "/api/v1/formulas",
+            params={"q": "610-03121", "manufacturer": "FIAT", "year": "1995"},
+        )
+        assert commercial.status_code == 200
+        assert any(item["code"] == "610031210119" for item in commercial.json()["items"])
+
+        detail = client.get("/api/v1/formulas/210009850101")
+        assert detail.status_code == 200
+        formula = detail.json()
+        assert formula["description"] == "VERMELHO FOGO LISA"
+        assert formula["display_code"] == "210-00985"
+        assert formula["variants"][0]["total_weight_g"] == "872.3"
+        assert formula["variants"][0]["components"][-1]["weight_g"] == "296.6"
+
+
+def test_formula_catalog_rejects_unknown_system_and_missing_code(api_bundle):
+    with TestClient(api_bundle[2]) as client:
+        invalid = client.get("/api/v1/formulas", params={"system": "INVALIDO"})
+        assert invalid.status_code == 400
+        assert invalid.json()["error"]["code"] == "INVALID_REQUEST"
+
+        missing = client.get("/api/v1/formulas/INEXISTENTE")
+        assert missing.status_code == 404
+        assert missing.json()["error"]["code"] == "FORMULA_NOT_FOUND"
+
+
+def test_formula_catalog_does_not_merge_obsolete_skymix_revision(api_bundle):
+    with TestClient(api_bundle[2]) as client:
+        response = client.get("/api/v1/formulas/210023200101")
+        assert response.status_code == 200
+        variant = response.json()["variants"][0]
+        assert variant["updated_at"] == "2010-04-01T00:00"
+        assert variant["total_weight_g"] == "903.9"
+        assert [(item["base_code"], item["weight_g"]) for item in variant["components"]] == [
+            ("BP218", "3.3"),
+            ("BP216", "11.5"),
+            ("BP299", "54.2"),
+            ("TH700", "307.3"),
+            ("BP240", "527.6"),
+        ]
+
+
+def test_formula_crud_and_measurement_dataset_api(api_bundle, tmp_path):
+    source = Path(__file__).resolve().parents[2] / "data" / "formulas.sqlite3"
+    editable_path = tmp_path / "formulas.sqlite3"
+    shutil.copy2(source, editable_path)
+    instrument, service, _ = api_bundle
+    session = _ready_session(service)
+    app = create_app(service, formula_catalog=SqliteFormulaCatalog(editable_path))
+    payload = {
+        "code": "210-99998", "description": "TESTE API METALICO", "year": "2026",
+        "universal_code": "API", "nuance": "A", "manufacturer": "MANDACOR",
+        "observations": "", "system": "POLIESTER", "finish_label": "METALICO",
+        "variants": [{
+            "condition": "DILUIDO", "package": "1 Quarto", "version": 1,
+            "components": [{"base_code": "BP240", "base_name": "Branco", "weight_g": "903.9"}],
+        }],
+    }
+    with TestClient(app) as client:
+        created = client.post("/api/v1/formulas", json=payload)
+        assert created.status_code == 201
+        code = created.json()["code"]
+        assert created.json()["origin"] == "USER"
+
+        payload["description"] = "TESTE API EDITADO"
+        edited = client.put(f"/api/v1/formulas/{code}", json=payload)
+        assert edited.status_code == 200
+        assert edited.json()["description"] == "TESTE API EDITADO"
+        formula_id = edited.json()["variants"][0]["formula_id"]
+
+        missing_grain = client.post(
+            f"/api/v1/formulas/{code}/readings",
+            json={
+                "session_id": str(session.session_id), "measurement_role": "sample",
+                "formula_id": formula_id,
+            },
+        )
+        assert missing_grain.status_code == 400
+        saved = client.post(
+            f"/api/v1/formulas/{code}/readings",
+            json={
+                "session_id": str(session.session_id), "measurement_role": "sample",
+                "formula_id": formula_id,
+                "metallic_grain": "MEDIO", "notes": "chapinha de teste",
+            },
+        )
+        assert saved.status_code == 201
+        assert saved.json()["metallic_grain"] == "MEDIO"
+        assert len(saved.json()["angles"]) == 5
+        assert saved.json()["schema_version"] == 2
+        assert saved.json()["quality_status"] in {"eligible", "review"}
+        assert len(client.get(f"/api/v1/formulas/{code}/readings").json()) == 1
+
+        duplicate = client.post(
+            f"/api/v1/formulas/{code}/readings",
+            json={
+                "session_id": str(session.session_id), "measurement_role": "sample",
+                "formula_id": formula_id,
+                "metallic_grain": "MEDIO", "notes": "duplicada",
+            },
+        )
+        assert duplicate.status_code == 409
+        assert duplicate.json()["error"]["code"] == "FORMULA_READING_ALREADY_SAVED"
+
+        matches = client.get(
+            "/api/v1/formulas/spectral-matches",
+            params={"session_id": str(session.session_id), "measurement_role": "sample"},
+        )
+        assert matches.status_code == 200
+        exact = next(item for item in matches.json()["items"] if item["code"] == code)
+        assert exact["compatibility"] == 100.0
+        assert exact["delta_e"] == 0.0
+        assert exact["matched_measurement_id"] == session.sample.measurement_id
+
+        removed = client.delete(f"/api/v1/formulas/{code}")
+        assert removed.status_code == 204
+        assert client.get(f"/api/v1/formulas/{code}").status_code == 404
 
 
 def test_status_disconnected(api_bundle):

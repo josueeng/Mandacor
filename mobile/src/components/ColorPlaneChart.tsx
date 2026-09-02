@@ -14,6 +14,7 @@ interface ColorPlaneChartProps {
 const PLOT_RANGE = 42;
 const TICK_POSITIONS = [8, 29, 50, 71, 92] as const;
 export const COLOR_PLANE_LIMIT = 5;
+const SCALE_STEPS = [5, 10, 20, 40, 80, 160, 320] as const;
 
 export function numericTicks(scale: number): number[] {
   return [-scale, -scale / 2, 0, scale / 2, scale];
@@ -24,8 +25,17 @@ function formatTick(value: number): string {
   return `${value > 0 ? '+' : ''}${value.toFixed(2)}`;
 }
 
-export function colorPlaneScale(_deltaA: number, _deltaB: number): number {
-  return COLOR_PLANE_LIMIT;
+function adaptiveScale(...values: number[]): number {
+  const magnitude = Math.max(0, ...values.filter(Number.isFinite).map(Math.abs));
+  return SCALE_STEPS.find((step) => step >= magnitude) ?? Math.ceil(magnitude / 100) * 100;
+}
+
+export function colorPlaneScale(deltaA: number, deltaB: number): number {
+  return adaptiveScale(deltaA, deltaB);
+}
+
+export function lightnessScale(deltaL: number): number {
+  return adaptiveScale(deltaL);
 }
 
 export function projectColorPoint(a: number, b: number, scale: number) {
@@ -108,7 +118,7 @@ export function ColorPlaneChart({
 }
 
 function CartesianNumbers({ scale }: { scale: number }) {
-  const ticks = Array.from({ length: scale * 2 + 1 }, (_, index) => index - scale);
+  const ticks = numericTicks(scale);
 
   return (
     <>
@@ -124,7 +134,7 @@ function CartesianNumbers({ scale }: { scale: number }) {
               value < 0 ? styles.greenNumber : styles.redNumber,
               { left: `${position}%` },
             ]}>
-              {value > 0 ? `+${value}` : value}
+              {formatTick(value)}
             </Text>
           </Fragment>
         );
@@ -141,7 +151,7 @@ function CartesianNumbers({ scale }: { scale: number }) {
               value < 0 ? styles.blueNumber : styles.yellowNumber,
               { top: `${position}%` },
             ]}>
-              {value > 0 ? `+${value}` : value}
+              {formatTick(value)}
             </Text>
           </Fragment>
         );
@@ -157,7 +167,7 @@ function LightnessScale({
   delta: number;
   angle: RequiredAngle;
 }) {
-  const scale = Math.max(1, Math.abs(delta) * 1.2);
+  const scale = lightnessScale(delta);
   const samplePosition = 50 + (delta / scale) * PLOT_RANGE;
   const ticks = numericTicks(scale);
 

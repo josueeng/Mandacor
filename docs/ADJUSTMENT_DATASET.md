@@ -22,6 +22,11 @@ Massa canônica usa gramas em `Decimal`; volume canônico usa ml em `Decimal`. L
 
 `adjustments.csv` contém adjustment/session IDs, data, sistema, acabamento, base/cor opcionais, volume, 15 valores TARGET, 15 BEFORE, 15 AFTER, motivo, feedback, identidades e learning eligibility.
 
+O schema atual é `mandacor.adjustment-effect.v2`. Ele também preserva timestamps e
+GUIDs de TARGET/BEFORE/AFTER, os instantes de criação/aplicação/conclusão e
+`data_quality_flags`. Esses campos permitem auditoria, deduplicação e separação
+temporal do conjunto sem inferir metadados ausentes.
+
 Para um componente, `pigmento_adicionado` e `quantidade_g` são preenchidos. Para múltiplos, permanecem vazios para evitar string ambígua; `component_count` e `MIXED_COMPONENTS` identificam o caso.
 
 ## CSV de componentes
@@ -33,6 +38,11 @@ adjustment_id,pigment_code,quantity_g
 ```
 
 O response de trial multicomponente pertence ao conjunto; não é dividido entre pigmentos.
+
+Este é o dataset apropriado para estudar **efeito de pigmento e quantidade** porque
+possui BEFORE, intervenção física em gramas/volume e AFTER. O dataset de leituras de
+fórmula descreve cor absoluta e composição; ele não deve ser usado sozinho como prova
+causal de dosagem.
 
 ## Estado do Gate 10
 

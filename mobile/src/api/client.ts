@@ -8,6 +8,14 @@ import {
   CorrectionNeed,
   Diagnosis,
   FinishType,
+  FormulaProduct,
+  FormulaReading,
+  FormulaSearchResult,
+  FormulaSearchFilters,
+  FormulaSpectralMatchResult,
+  FormulaSystem,
+  FormulaUpsertPayload,
+  MetallicGrain,
   HealthResponse,
   InstrumentStatus,
   PaintSystem,
@@ -78,6 +86,81 @@ export class MandacorApiClient {
 
   instrumentStatus(): Promise<InstrumentStatus> {
     return this.request('/api/v1/instrument/status');
+  }
+
+  searchFormulas(
+    query: string,
+    system?: FormulaSystem,
+    limit = 30,
+    offset = 0,
+    filters: FormulaSearchFilters = {},
+  ): Promise<FormulaSearchResult> {
+    const parameters = [
+      `q=${encodeURIComponent(query.trim())}`,
+      `limit=${limit}`,
+      `offset=${offset}`,
+      ...(system ? [`system=${encodeURIComponent(system)}`] : []),
+      ...(filters.manufacturer?.trim() ? [`manufacturer=${encodeURIComponent(filters.manufacturer.trim())}`] : []),
+      ...(filters.year?.trim() ? [`year=${encodeURIComponent(filters.year.trim())}`] : []),
+      ...(filters.finish?.trim() ? [`finish=${encodeURIComponent(filters.finish.trim())}`] : []),
+      ...(filters.universalCode?.trim() ? [`universal_code=${encodeURIComponent(filters.universalCode.trim())}`] : []),
+    ];
+    return this.request(`/api/v1/formulas?${parameters.join('&')}`);
+  }
+
+  getFormula(productCode: string): Promise<FormulaProduct> {
+    return this.request(`/api/v1/formulas/${encodeURIComponent(productCode)}`);
+  }
+
+  createFormula(payload: FormulaUpsertPayload): Promise<FormulaProduct> {
+    return this.request('/api/v1/formulas', {
+      method: 'POST', body: JSON.stringify(payload),
+    });
+  }
+
+  updateFormula(productCode: string, payload: FormulaUpsertPayload): Promise<FormulaProduct> {
+    return this.request(`/api/v1/formulas/${encodeURIComponent(productCode)}`, {
+      method: 'PUT', body: JSON.stringify(payload),
+    });
+  }
+
+  deleteFormula(productCode: string): Promise<void> {
+    return this.request(`/api/v1/formulas/${encodeURIComponent(productCode)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  formulaReadings(productCode: string): Promise<FormulaReading[]> {
+    return this.request(`/api/v1/formulas/${encodeURIComponent(productCode)}/readings`);
+  }
+
+  formulaSpectralMatches(
+    sessionId: string,
+    measurementRole: 'target' | 'sample',
+    limit = 30,
+  ): Promise<FormulaSpectralMatchResult> {
+    return this.request(
+      `/api/v1/formulas/spectral-matches?session_id=${encodeURIComponent(sessionId)}&measurement_role=${measurementRole}&limit=${limit}`,
+    );
+  }
+
+  saveFormulaReading(
+    productCode: string,
+    sessionId: string,
+    formulaId: number,
+    metallicGrain: MetallicGrain | null,
+    notes = '',
+  ): Promise<FormulaReading> {
+    return this.request(`/api/v1/formulas/${encodeURIComponent(productCode)}/readings`, {
+      method: 'POST',
+      body: JSON.stringify({
+        session_id: sessionId,
+        measurement_role: 'sample',
+        formula_id: formulaId,
+        metallic_grain: metallicGrain,
+        notes,
+      }),
+    });
   }
 
   connect(mode: 'auto' | 'manual', host?: string): Promise<ConnectResponse> {

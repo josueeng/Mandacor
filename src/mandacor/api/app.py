@@ -5,7 +5,7 @@ import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -17,6 +17,8 @@ from mandacor.api.schemas import (
     AdjustmentCreateRequest,
     AdjustmentFeedbackRequest,
     ConnectRequest,
+    FormulaReadingRequest,
+    FormulaUpsertRequest,
     PaintContextRequest,
     WaitOperationRequest,
     adjustment_dict,
@@ -24,6 +26,8 @@ from mandacor.api.schemas import (
     correction_dict,
     diagnosis_dict,
     discovered_instrument_dict,
+    formula_product_dict,
+    formula_search_dict,
     instrument_info_dict,
     measurement_dict,
     measurement_reference_dict,
@@ -48,10 +52,17 @@ from mandacor.infrastructure.storage.pending_adjustment_json import (
     JsonPendingAdjustmentRepository,
 )
 from mandacor.infrastructure.storage.session_json import JsonSessionRepository
+from mandacor.infrastructure.storage.formula_sqlite import (
+    DuplicateFormulaReadingError,
+    FormulaCatalogNotFoundError,
+    SqliteFormulaCatalog,
+)
 
 
 logger = logging.getLogger(__name__)
 API_VERSION = "v1"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_FORMULA_CATALOG = PROJECT_ROOT / "data" / "formulas.sqlite3"
 
 
 def _error_body(
@@ -107,9 +118,11 @@ def create_app(
     service: MandacorApiService | None = None,
     *,
     settings: ApiConfig | None = None,
+    formula_catalog: SqliteFormulaCatalog | None = None,
 ) -> FastAPI:
     api = service or _default_service()
     config = settings or ApiConfig()
+    catalog = formula_catalog or SqliteFormulaCatalog(DEFAULT_FORMULA_CATALOG)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -148,7 +161,7 @@ def create_app(
             CORSMiddleware,
             allow_origins=list(config.cors_origins),
             allow_credentials=False,
-            allow_methods=["GET", "POST"],
+            allow_methods=["GET", "POST", "PUT", "DELETE"],
             allow_headers=["Content-Type"],
         )
 
@@ -208,6 +221,29 @@ def create_app(
             content=_error_body("MEASUREMENT_NOT_FOUND", str(error)),
         )
 
+    @app.exception_handler(FormulaCatalogNotFoundError)
+    async def formula_not_found_handler(_: Request, error: FormulaCatalogNotFoundError):
+        return JSONResponse(
+            status_code=404,
+            content=_error_body("FORMULA_NOT_FOUND", f"formula {error} does not exist"),
+        )
+
+    @app.exception_handler(DuplicateFormulaReadingError)
+    async def duplicate_formula_reading_handler(
+        _: Request, error: DuplicateFormulaReadingError
+    ):
+        return JSONResponse(
+            status_code=409,
+            content=_error_body(
+                "FORMULA_READING_ALREADY_SAVED",
+                str(error),
+                {
+                    "product_code": error.product_code,
+                    "measurement_id": error.measurement_id,
+                },
+            ),
+        )
+
     @app.exception_handler(InstrumentError)
     async def instrument_error_handler(_: Request, error: InstrumentError):
         return JSONResponse(
@@ -233,6 +269,98 @@ def create_app(
             "recovery": "ERROR" if api.recovery_error else "OK",
             "recovery_error": api.recovery_error,
         }
+
+    @app.get("/api/v1/formulas/catalog")
+    def formula_catalog_metadata():
+        metadata = catalog.metadata()
+        return {key: int(metadata[key]) for key in ("products", "formulas", "components")}
+
+    @app.get("/api/v1/formulas")
+    def formulas(
+        q: str = Query(default="", max_length=120),
+        system: str | None = Query(default=None),
+        manufacturer: str = Query(default="", max_length=80),
+        year: str = Query(default="", max_length=40),
+        finish: str = Query(default="", max_length=40),
+        universal_code: str = Query(default="", max_length=80),
+        limit: int = Query(default=30, ge=1, le=100),
+        offset: int = Query(default=0, ge=0),
+    ):
+        return formula_search_dict(
+            catalog.search(
+                q,
+                system,
+                manufacturer=manufacturer,
+                year=year,
+                finish=finish,
+                universal_code=universal_code,
+                limit=limit,
+                offset=offset,
+            )
+        )
+
+    @app.post("/api/v1/formulas", status_code=201)
+    def create_formula(body: FormulaUpsertRequest):
+        product = catalog.create(body.model_dump(mode="json"))
+        return formula_product_dict(product, include_variants=True)
+
+    @app.put("/api/v1/formulas/{product_code}")
+    def update_formula(product_code: str, body: FormulaUpsertRequest):
+        product = catalog.update(product_code, body.model_dump(mode="json"))
+        return formula_product_dict(product, include_variants=True)
+
+    @app.delete("/api/v1/formulas/{product_code}", status_code=204)
+    def delete_formula(product_code: str):
+        catalog.delete(product_code)
+
+    @app.get("/api/v1/formulas/{product_code}/readings")
+    def formula_readings(product_code: str):
+        return list(catalog.readings(product_code))
+
+    @app.post("/api/v1/formulas/{product_code}/readings", status_code=201)
+    def save_formula_reading(product_code: str, body: FormulaReadingRequest):
+        session = api.sessions.get(body.session_id)
+        measurement = session.sample if body.measurement_role == "sample" else session.target
+        if measurement is None:
+            raise ValueError(f"session has no {body.measurement_role} measurement")
+        return catalog.save_reading(
+            product_code,
+            session_id=str(body.session_id),
+            role=body.measurement_role,
+            formula_id=body.formula_id,
+            metallic_grain=body.metallic_grain,
+            notes=body.notes,
+            measurement=measurement,
+        )
+
+    @app.get("/api/v1/formulas/spectral-matches")
+    def formula_spectral_matches(
+        session_id: uuid.UUID,
+        measurement_role: str = Query(default="sample", pattern="^(target|sample)$"),
+        limit: int = Query(default=30, ge=1, le=100),
+    ):
+        session = api.sessions.get(session_id)
+        measurement = session.sample if measurement_role == "sample" else session.target
+        if measurement is None:
+            raise ValueError(f"session has no {measurement_role} measurement")
+        result = catalog.spectral_matches(measurement, limit=limit)
+        return {
+            "items": [
+                {
+                    **formula_product_dict(match["product"]),
+                    "compatibility": match["compatibility"],
+                    "delta_e": match["delta_e"],
+                    "matched_reading_id": match["reading_id"],
+                    "matched_measurement_id": match["measurement_id"],
+                }
+                for match in result["items"]
+            ],
+            "total_compared": result["total"],
+        }
+
+    @app.get("/api/v1/formulas/{product_code}")
+    def formula(product_code: str):
+        return formula_product_dict(catalog.get(product_code), include_variants=True)
 
     @app.get("/api/v1/instrument/status")
     def instrument_status():

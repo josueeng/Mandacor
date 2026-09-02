@@ -55,6 +55,48 @@ describe('MandacorApiClient', () => {
     });
   });
 
+  test('searches formulas with encoded terms and system filter', async () => {
+    mockFetch.mockResolvedValue(new Response(JSON.stringify({
+      items: [], total: 0, limit: 30, offset: 0,
+    }), { status: 200 }));
+    const client = new MandacorApiClient('http://localhost:8000');
+    await client.searchFormulas('vermelho fogo', 'POLIESTER');
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/formulas?q=vermelho%20fogo&limit=30&offset=0&system=POLIESTER',
+      expect.objectContaining({ signal: expect.anything() }),
+    );
+  });
+
+  test('searches formulas with additional catalog filters', async () => {
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
+      items: [], total: 0, limit: 30, offset: 0,
+    }), { status: 200 }));
+    const client = new MandacorApiClient('http://localhost:8000');
+
+    await client.searchFormulas('210-03121', 'POLIESTER', 30, 0, {
+      manufacturer: 'Fiat', year: '1995', finish: 'Lisa', universalCode: '178',
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/formulas?q=210-03121&limit=30&offset=0&system=POLIESTER&manufacturer=Fiat&year=1995&finish=Lisa&universal_code=178',
+      expect.any(Object),
+    );
+  });
+
+  test('searches the paint dataset using a captured spectral measurement', async () => {
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({
+      items: [], total_compared: 0,
+    }), { status: 200 }));
+    const client = new MandacorApiClient('http://localhost:8000');
+
+    await client.formulaSpectralMatches('session-1', 'sample');
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/formulas/spectral-matches?session_id=session-1&measurement_role=sample&limit=30',
+      expect.any(Object),
+    );
+  });
+
   test('retries AFTER with the same adjustment ID and no quantity body', async () => {
     mockFetch.mockResolvedValue(new Response(JSON.stringify({ operation_id: 'op-2' }), { status: 201 }));
     const client = new MandacorApiClient('http://localhost:8000');

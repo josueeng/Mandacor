@@ -21,8 +21,12 @@ def _lab_columns(prefix: str) -> tuple[str, ...]:
 
 
 MAIN_DATASET_COLUMNS = (
+    "dataset_schema_version",
     "id_ajuste",
     "data",
+    "created_at",
+    "applied_at",
+    "completed_at",
     "sistema",
     "finish_type",
     "base",
@@ -39,11 +43,18 @@ MAIN_DATASET_COLUMNS = (
     "observacoes",
     "session_id",
     "target_measurement_id",
+    "target_measurement_guid",
+    "target_measurement_timestamp",
     "before_measurement_id",
+    "before_measurement_guid",
+    "before_measurement_timestamp",
     "after_measurement_id",
+    "after_measurement_guid",
+    "after_measurement_timestamp",
     "instrument_serial",
     "component_count",
     "learning_eligibility",
+    "data_quality_flags",
 )
 
 COMPONENT_DATASET_COLUMNS = (
@@ -66,8 +77,12 @@ def _measurement_values(prefix: str, measurement: Measurement) -> dict[str, str]
 def trial_to_dataset_row(trial: CompletedAdjustmentTrial) -> Mapping[str, str]:
     single = trial.components[0] if len(trial.components) == 1 else None
     values = {
+        "dataset_schema_version": "mandacor.adjustment-effect.v2",
         "id_ajuste": str(trial.adjustment_id),
         "data": trial.completed_at.isoformat(),
+        "created_at": trial.created_at.isoformat(),
+        "applied_at": trial.applied_at.isoformat(),
+        "completed_at": trial.completed_at.isoformat(),
         "sistema": trial.paint_context.system.value,
         "finish_type": trial.paint_context.finish_type.value,
         "base": trial.base_identifier or "",
@@ -86,11 +101,29 @@ def trial_to_dataset_row(trial: CompletedAdjustmentTrial) -> Mapping[str, str]:
         "observacoes": trial.observations or "",
         "session_id": str(trial.session_id),
         "target_measurement_id": str(trial.target.measurement_id),
+        "target_measurement_guid": trial.target.guid or "",
+        "target_measurement_timestamp": (
+            trial.target.timestamp.isoformat()
+            if trial.target.timestamp else trial.target.timestamp_raw or ""
+        ),
         "before_measurement_id": str(trial.before.measurement_id),
+        "before_measurement_guid": trial.before.guid or "",
+        "before_measurement_timestamp": (
+            trial.before.timestamp.isoformat()
+            if trial.before.timestamp else trial.before.timestamp_raw or ""
+        ),
         "after_measurement_id": str(trial.after.measurement_id),
+        "after_measurement_guid": trial.after.guid or "",
+        "after_measurement_timestamp": (
+            trial.after.timestamp.isoformat()
+            if trial.after.timestamp else trial.after.timestamp_raw or ""
+        ),
         "instrument_serial": trial.instrument_serial or "",
         "component_count": str(len(trial.components)),
         "learning_eligibility": trial.learning_eligibility.value,
+        "data_quality_flags": ",".join(
+            sorted(flag.value for flag in trial.data_quality_flags)
+        ),
     }
     values.update(_measurement_values("leitura_alvo", trial.target))
     values.update(_measurement_values("leitura_antes", trial.before))

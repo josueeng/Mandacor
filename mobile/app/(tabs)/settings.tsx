@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 
 import { ActionButton, Card, ErrorNotice, Field, Screen, ScreenHeader, SectionHeader, StatusBadge, uiStyles } from '@/src/components/ui';
 import { presentState } from '@/src/presentation/format';
@@ -41,6 +42,11 @@ export default function SettingsScreen() {
         subtitle="Servidor local, espectrofotômetro e informações técnicas do aplicativo."
       />
       <ErrorNotice message={state.errorMessage} />
+      <Card tone="info">
+        <SectionHeader>REGISTROS</SectionHeader>
+        <Text style={uiStyles.muted}>Consulte os ajustes e medições registrados na sessão atual.</Text>
+        <ActionButton label="ABRIR HISTÓRICO" secondary onPress={() => router.push('/history')} />
+      </Card>
       <Card tone={state.apiState === 'ONLINE' ? 'success' : 'warning'}>
         <SectionHeader>SERVIDOR MANDACOR</SectionHeader>
         <StatusBadge online={state.apiState === 'ONLINE'} label={`SERVIDOR ${presentState(state.apiState)}`} />

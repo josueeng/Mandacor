@@ -50,8 +50,6 @@ export default function MeasureScreen() {
     );
   }
 
-  const nextType = session.target ? 'sample' : 'target';
-
   const confirmReplace = (type: 'target' | 'sample') => {
     const measurement = type === 'target' ? session.target : session.sample;
     if (!measurement || operationActive) return;
@@ -65,7 +63,7 @@ export default function MeasureScreen() {
     if (!replaceCandidate) return;
     const type = replaceCandidate;
     setReplaceCandidate(null);
-    void state.replaceWithLatest(type);
+    void state.prepareCapture(type);
   };
 
   return (
@@ -81,13 +79,13 @@ export default function MeasureScreen() {
             <Text style={styles.modalEyebrow}>SUBSTITUIR LEITURA</Text>
             <Text style={styles.modalTitle}>Trocar {candidateLabel}?</Text>
             <Text style={styles.modalText}>
-              A leitura #{candidateMeasurement?.measurement_id ?? '—'} será substituída pela última leitura armazenada no espectrofotômetro.
+              A leitura #{candidateMeasurement?.measurement_id ?? '—'} será substituída somente depois que uma nova medição for feita no espectrofotômetro.
             </Text>
             <View style={styles.modalWarning}>
-              <Text style={styles.modalWarningText}>Confirme que a nova leitura já foi realizada no aparelho.</Text>
+              <Text style={styles.modalWarningText}>Após confirmar, faça a nova leitura no aparelho. Leituras anteriores não serão usadas automaticamente.</Text>
             </View>
             <ActionButton
-              label="USAR ÚLTIMA LEITURA"
+              label="PREPARAR NOVA LEITURA"
               onPress={replaceConfirmed}
               disabled={state.busy}
             />
@@ -141,7 +139,11 @@ export default function MeasureScreen() {
           {operation.status === 'TIMED_OUT' && (
             <>
               <Text style={styles.warning}>Nenhuma nova leitura foi detectada.</Text>
-              <ActionButton label="TENTAR NOVAMENTE" onPress={() => void state.prepareCapture(nextType)} disabled={state.busy} />
+              <ActionButton
+                label="TENTAR NOVAMENTE"
+                onPress={() => void state.prepareCapture(operation.type === 'TARGET' ? 'target' : 'sample')}
+                disabled={state.busy}
+              />
             </>
           )}
         </Card>

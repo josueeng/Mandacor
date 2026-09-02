@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import uuid
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from mandacor.domain.adjustments import OperatorTrialStatus, VisualResult
 from mandacor.domain.measurements import MeasurementAngle
@@ -64,6 +65,73 @@ class AdjustmentFeedbackRequest(BaseModel):
     @classmethod
     def normalize_feedback_enum(cls, value):
         return value.lower() if isinstance(value, str) else value
+
+
+FormulaSystemName = Literal["POLIESTER", "PU", "LACA", "ESMALTE_SINTETICO", "EPOXI"]
+MetallicGrain = Literal["FINO", "MEDIO_FINO", "MEDIO", "GROSSEIRO", "MUITO_GROSSEIRO"]
+
+
+class FormulaComponentRequest(BaseModel):
+    base_code: str = Field(min_length=1, max_length=40)
+    base_name: str = Field(default="", max_length=160)
+    weight_g: Decimal = Field(gt=0)
+
+    @field_validator("base_code")
+    @classmethod
+    def normalize_base_code(cls, value: str) -> str:
+        return value.strip().upper()
+
+
+class FormulaVariantRequest(BaseModel):
+    condition: str = Field(min_length=1, max_length=30)
+    package: str = Field(default="1 Quarto", min_length=1, max_length=40)
+    version: int = Field(default=1, ge=1)
+    components: list[FormulaComponentRequest] = Field(min_length=1)
+
+    @field_validator("condition")
+    @classmethod
+    def normalize_condition(cls, value: str) -> str:
+        return value.strip().upper()
+
+
+class FormulaUpsertRequest(BaseModel):
+    code: str = Field(min_length=1, max_length=40)
+    description: str = Field(min_length=1, max_length=160)
+    year: str = Field(default="", max_length=40)
+    universal_code: str = Field(default="", max_length=80)
+    nuance: str = Field(default="", max_length=40)
+    manufacturer: str = Field(default="", max_length=100)
+    observations: str = Field(default="", max_length=500)
+    system: FormulaSystemName
+    finish_label: str = Field(min_length=1, max_length=60)
+    variants: list[FormulaVariantRequest] = Field(min_length=1)
+
+    @field_validator("code", "description", "manufacturer", "finish_label")
+    @classmethod
+    def strip_text(cls, value: str) -> str:
+        return value.strip()
+
+    @model_validator(mode="after")
+    def validate_commercial_code(self):
+        prefixes = {
+            "POLIESTER": "210", "PU": "610", "LACA": "510",
+            "ESMALTE_SINTETICO": "410",
+        }
+        expected = prefixes.get(self.system)
+        if expected:
+            compact = self.code.replace("-", "")
+            if len(compact) != 8 or not compact.isdigit() or compact[:3] != expected:
+                raise ValueError(f"code must follow {expected}-00000 for this paint system")
+            self.code = f"{expected}-{compact[3:]}"
+        return self
+
+
+class FormulaReadingRequest(BaseModel):
+    session_id: uuid.UUID
+    measurement_role: Literal["target", "sample"] = "sample"
+    formula_id: int | None = Field(default=None, gt=0)
+    metallic_grain: MetallicGrain | None = None
+    notes: str = Field(default="", max_length=500)
 
 
 def instrument_info_dict(info) -> dict[str, Any]:
@@ -245,6 +313,60 @@ def pigment_recommendation_dict(recommendation) -> dict[str, Any]:
         "requires_bench_test": recommendation.requires_bench_test,
         "no_single_safe_candidate": recommendation.no_single_safe_candidate,
         "dosage_available": False,
+    }
+
+
+def formula_product_dict(product, *, include_variants: bool = False) -> dict[str, Any]:
+    result = {
+        "code": product.code,
+        "display_code": product.display_code,
+        "description": product.description,
+        "year": product.year,
+        "universal_code": product.universal_code,
+        "nuance": product.nuance,
+        "manufacturer": product.manufacturer,
+        "observations": product.observations,
+        "system": product.system,
+        "system_label": product.system_label,
+        "paint_line": product.paint_line,
+        "finish_code": product.finish_code,
+        "finish_label": product.finish_label,
+        "personalized": product.personalized,
+        "formula_count": product.formula_count,
+        "origin": product.origin,
+        "editable": True,
+        "reading_count": product.reading_count,
+    }
+    if include_variants:
+        result["variants"] = [
+            {
+                "formula_id": variant.formula_id,
+                "condition": variant.condition,
+                "package": variant.package,
+                "version": variant.version,
+                "updated_at": variant.updated_at,
+                "total_weight_g": format(variant.total_weight_g, ".4f").rstrip("0").rstrip("."),
+                "components": [
+                    {
+                        "position": component.position,
+                        "base_code": component.base_code,
+                        "base_name": component.base_name,
+                        "weight_g": format(component.weight_g, ".4f").rstrip("0").rstrip("."),
+                    }
+                    for component in variant.components
+                ],
+            }
+            for variant in product.variants
+        ]
+    return result
+
+
+def formula_search_dict(result) -> dict[str, Any]:
+    return {
+        "items": [formula_product_dict(item) for item in result.items],
+        "total": result.total,
+        "limit": result.limit,
+        "offset": result.offset,
     }
 
 

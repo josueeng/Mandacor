@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+logs/
+
+mobile/.expo/
+mobile/dist/
+mobile/node_modules/
+
+tools/**/target/
+
+# Banco proprietário de origem; o catálogo normalizado fica em data/.
+skymix/
