@@ -49,3 +49,7 @@ As portas padrão são `8000` para o backend e `8081` para o Expo. Para uma exec
 3. Libere as portas `8000` e `8081` no firewall da rede privada.
 4. Confira se o endereço mostrado em `API do celular` abre no navegador do celular acrescentando `/health`.
 5. Se houver várias placas de rede, defina `MANDACOR_LAN_IP` manualmente conforme os exemplos acima.
+
+## Uso diário na loja
+
+Para que a API inicie sozinha com o computador, sem abrir o inicializador, instale-a como serviço com `INSTALAR_SERVICO_LINUX.sh`. O passo a passo completo, incluindo o app instalado como APK e o acesso fora da loja, está em `docs/IMPLANTACAO_LOJA.md`.
