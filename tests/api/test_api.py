@@ -659,6 +659,11 @@ def test_completed_adjustment_exposes_domain_response_outcome_and_measurement_ch
         assert result["after_comparison"]["sample_id"] == 14
         assert result["worst_angle_before"] in [15, 25, 45, 75, 105]
         assert result["dosage_generated_by_system"] is False
+        assessment = result["assessment"]
+        assert assessment["verdict"] in {"IMPROVED", "WORSENED", "MIXED", "UNCHANGED"}
+        assert [item["angle"] for item in assessment["angles"]] == [15, 25, 45, 75, 105]
+        assert [axis["axis"] for axis in assessment["angles"][0]["axes"]] == ["L", "A", "B"]
+        assert result["operator_disagrees_with_instrument"] is False
 
 
 def test_pending_adjustment_is_recovered_after_service_restart(tmp_path):

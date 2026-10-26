@@ -13,11 +13,16 @@ import {
   OPERATOR_QUANTITY_NOTICE,
   VOLUME_PRESETS,
 } from '@/src/features/adjustments/model';
+import {
+  assessmentFindings,
+  OPERATOR_DISAGREEMENT_NOTICE,
+  presentVerdict,
+} from '@/src/features/adjustments/assessment';
 import { confirmAppliedWithVerification } from '@/src/features/adjustments/workflow';
 import { formatSigned, presentState } from '@/src/presentation/format';
 import { useMandacor } from '@/src/state/AppContext';
 import { colors, radius, spacing } from '@/src/theme/tokens';
-import { Adjustment, FinishType, PaintSystem } from '@/src/types/api';
+import { Adjustment, FinishType, PaintSystem, TrialAssessment } from '@/src/types/api';
 
 const SYSTEMS: PaintSystem[] = ['POLYESTER_BASECOAT', 'PU', 'UNKNOWN'];
 const FINISHES: FinishType[] = ['SOLID', 'METALLIC', 'PEARL', 'UNKNOWN'];
@@ -279,6 +284,9 @@ export default function AdjustmentScreen() {
           <SectionHeader>FEEDBACK DO OPERADOR</SectionHeader>
           <ChoiceRow values={['BETTER', 'WORSE', 'SAME', 'UNKNOWN'] as const} selected={visualResult} onSelect={setVisualResult} />
           <ChoiceRow values={['IN_PROGRESS', 'ACCEPTED', 'REJECTED', 'UNKNOWN'] as const} selected={operatorStatus} onSelect={setOperatorStatus} />
+          {contradictsInstrument(adjustment.assessment, visualResult) && (
+            <Callout title="DIVERGÊNCIA COM O INSTRUMENTO" tone="warning">{OPERATOR_DISAGREEMENT_NOTICE}</Callout>
+          )}
           <Field value={observations} onChangeText={setObservations} placeholder="Observações visuais (opcional)" multiline />
           <ActionButton label="SALVAR FEEDBACK" loading={busy} onPress={() => void submitFeedback()} />
         </Card>
@@ -323,6 +331,7 @@ function CompletedResult({ adjustment }: { adjustment: Adjustment }) {
   const result = completedResultData(adjustment);
   if (!result) return null;
   return <>
+    {adjustment.assessment && <VerdictCard assessment={adjustment.assessment} />}
     <SectionHeader>CADEIA EXPERIMENTAL</SectionHeader>
     <Card>
       <TechnicalRow label="TARGET" value={`#${result.targetMeasurementId}`} />
@@ -351,6 +360,37 @@ function CompletedResult({ adjustment }: { adjustment: Adjustment }) {
   </>;
 }
 
+function contradictsInstrument(assessment: TrialAssessment | null, visualResult: string): boolean {
+  if (!assessment) return false;
+  return (visualResult === 'BETTER' && assessment.verdict === 'WORSENED')
+    || (visualResult === 'WORSE' && assessment.verdict === 'IMPROVED');
+}
+
+function VerdictCard({ assessment }: { assessment: TrialAssessment }) {
+  const verdict = presentVerdict(assessment.verdict);
+  const findings = assessmentFindings(assessment);
+  const accent = { success: colors.success, danger: colors.danger, warning: colors.warning, info: colors.technical }[verdict.tone];
+  return <Card tone={verdict.tone}>
+    <Text style={styles.verdictEyebrow}>ANÁLISE DO INSTRUMENTO</Text>
+    <Text style={[styles.verdictTitle, { color: accent }]}>{verdict.title}</Text>
+    <Text style={styles.verdictDescription}>{verdict.description}</Text>
+    <TechnicalRow
+      label="Maior ΔE"
+      value={`${assessment.worst_delta_e_before.toFixed(2)} → ${assessment.worst_delta_e_after.toFixed(2)}`}
+    />
+    {assessment.worsened_angles.length > 0 && (
+      <TechnicalRow label="Pioraram" value={assessment.worsened_angles.map((angle) => `${angle}°`).join(' · ')} />
+    )}
+    {assessment.improved_angles.length > 0 && (
+      <TechnicalRow label="Melhoraram" value={assessment.improved_angles.map((angle) => `${angle}°`).join(' · ')} />
+    )}
+    {findings.map((item) => <Text key={item.key} style={styles.verdictFinding}>• {item.text}</Text>)}
+    <Text style={uiStyles.muted}>
+      Variações abaixo de {assessment.delta_e_noise.toFixed(2)} ΔE são tratadas como ruído. Esta análise não depende do feedback visual.
+    </Text>
+  </Card>;
+}
+
 function ChoiceRow<T extends string>({ values, selected, onSelect }: { values: readonly T[]; selected: string; onSelect: (value: T) => void }) {
   return <View style={styles.choices}>{values.map((value) => <Pressable key={value} onPress={() => onSelect(value)} style={[styles.choice, selected === value && styles.choiceSelected]}><Text style={[styles.choiceText, selected === value && styles.choiceTextSelected]}>{value}</Text></Pressable>)}</View>;
 }
@@ -370,4 +410,8 @@ const styles = StyleSheet.create({
   modalTitle: { color: colors.warning, fontSize: 22, fontWeight: '900' },
   modalText: { color: colors.textPrimary, fontSize: 16, lineHeight: 24 },
   angle: { color: colors.textPrimary, fontSize: 19, fontWeight: '900' },
+  verdictEyebrow: { color: colors.textSecondary, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
+  verdictTitle: { fontSize: 26, fontWeight: '900' },
+  verdictDescription: { color: colors.textPrimary, fontSize: 15, lineHeight: 22 },
+  verdictFinding: { color: colors.textPrimary, fontSize: 14, lineHeight: 20 },
 });

@@ -31,6 +31,7 @@ from mandacor.domain.pigments import (
     build_skylack_knowledge_base,
 )
 from mandacor.domain.sessions import ColorSession
+from mandacor.domain.trial_assessment import TrialVerdict
 
 
 SESSION_ID = uuid.UUID("917cf08a-565b-43f9-b424-14a3787d79c7")
@@ -260,3 +261,32 @@ def test_sequential_history_preserves_chain_and_old_trials():
     assert history.trials[0] is trial1
     assert history.trials[1].before is trial1.after
     assert history.trials[1].after is trial2.after
+
+
+def test_completed_trial_is_judged_worse_by_instrument_without_operator_feedback():
+    target = _measurement(12, LabValue(50, 0, 0))
+    before = _measurement(13, LabValue(49, 0, 0))
+    trial = complete_adjustment_trial(
+        _applied(session=_session(target, before)),
+        _measurement(14, LabValue(53, 0, 0)),
+        now=lambda: LATER,
+    )
+    assert trial.visual_result is VisualResult.UNKNOWN
+    assert trial.assessment.verdict is TrialVerdict.WORSENED
+    assert trial.assessment.overshoot_detected
+    assert not trial.operator_disagrees_with_instrument
+
+
+def test_operator_feedback_contradicting_instrument_is_flagged():
+    target = _measurement(12, LabValue(50, 0, 0))
+    before = _measurement(13, LabValue(49, 0, 0))
+    trial = complete_adjustment_trial(
+        _applied(session=_session(target, before)),
+        _measurement(14, LabValue(46, 0, 0)),
+        now=lambda: LATER,
+    ).with_operator_feedback(
+        visual_result=VisualResult.BETTER,
+        operator_status=OperatorTrialStatus.ACCEPTED,
+    )
+    assert trial.assessment.verdict is TrialVerdict.WORSENED
+    assert trial.operator_disagrees_with_instrument

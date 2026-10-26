@@ -370,6 +370,39 @@ def formula_search_dict(result) -> dict[str, Any]:
     }
 
 
+def assessment_dict(assessment) -> dict[str, Any]:
+    return {
+        "verdict": assessment.verdict.name,
+        "worst_delta_e_before": assessment.worst_delta_e_before,
+        "worst_delta_e_after": assessment.worst_delta_e_after,
+        "improved_angles": [int(angle) for angle in assessment.improved_angles],
+        "worsened_angles": [int(angle) for angle in assessment.worsened_angles],
+        "overshoot_detected": assessment.overshoot_detected,
+        "wrong_direction_detected": assessment.wrong_direction_detected,
+        "delta_e_noise": assessment.delta_e_noise,
+        "axis_noise": assessment.axis_noise,
+        "angles": [
+            {
+                "angle": int(angle),
+                "before_delta_e76": item.before_delta_e76,
+                "after_delta_e76": item.after_delta_e76,
+                "change": item.change.name,
+                "axes": [
+                    {
+                        "axis": axis.axis.name,
+                        "before_delta": axis.before_delta,
+                        "after_delta": axis.after_delta,
+                        "change": axis.change.name,
+                        "crossed_target": axis.crossed_target,
+                    }
+                    for axis in item.axes
+                ],
+            }
+            for angle, item in assessment.by_angle.items()
+        ],
+    }
+
+
 def adjustment_dict(adjustment) -> dict[str, Any]:
     result = {
         "adjustment_id": str(adjustment.adjustment_id),
@@ -430,6 +463,8 @@ def adjustment_dict(adjustment) -> dict[str, Any]:
                     }
                     for angle in MeasurementAngle
                 ],
+                "assessment": assessment_dict(adjustment.assessment),
+                "operator_disagrees_with_instrument": adjustment.operator_disagrees_with_instrument,
                 "worst_angle_before": int(adjustment.worst_angle_before),
                 "worst_angle_after": int(adjustment.worst_angle_after),
                 "visual_result": adjustment.visual_result.name,
@@ -444,6 +479,8 @@ def adjustment_dict(adjustment) -> dict[str, Any]:
                 "before_comparison": None,
                 "after_comparison": None,
                 "outcomes": None,
+                "assessment": None,
+                "operator_disagrees_with_instrument": None,
                 "worst_angle_before": None,
                 "worst_angle_after": None,
                 "visual_result": None,

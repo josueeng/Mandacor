@@ -14,6 +14,7 @@ from mandacor.domain.diagnosis import diagnose_comparison
 from mandacor.domain.measurements import Measurement, MeasurementAngle, REQUIRED_MEASUREMENT_ANGLES
 from mandacor.domain.pigments import PaintContext, PigmentKnowledgeBase
 from mandacor.domain.sessions import ColorSession, SessionState
+from mandacor.domain.trial_assessment import TrialAssessment, TrialVerdict, assess_trial
 
 
 class AdjustmentError(ValueError):
@@ -245,6 +246,18 @@ class CompletedAdjustmentTrial:
         object.__setattr__(self, "components", tuple(self.components))
         if self.lifecycle is not AdjustmentLifecycle.COMPLETED:
             raise AdjustmentError("completed trial must have completed lifecycle")
+
+    @property
+    def assessment(self) -> TrialAssessment:
+        return assess_trial(self.before_comparison, self.after_comparison)
+
+    @property
+    def operator_disagrees_with_instrument(self) -> bool:
+        verdict = self.assessment.verdict
+        return (
+            (self.visual_result is VisualResult.BETTER and verdict is TrialVerdict.WORSENED)
+            or (self.visual_result is VisualResult.WORSE and verdict is TrialVerdict.IMPROVED)
+        )
 
     @property
     def data_quality_flags(self) -> frozenset[DataQualityFlag]:

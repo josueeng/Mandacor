@@ -273,6 +273,16 @@ def _print_adjustment_trial(trial) -> None:
         )
     print(f"Worst angle before: {int(trial.worst_angle_before)}°")
     print(f"Worst angle after: {int(trial.worst_angle_after)}°")
+    assessment = trial.assessment
+    print(
+        f"Instrument verdict: {assessment.verdict.name} "
+        f"(worst ΔE76 {assessment.worst_delta_e_before:.3f} -> "
+        f"{assessment.worst_delta_e_after:.3f})"
+    )
+    if assessment.overshoot_detected:
+        print("Warning: at least one axis crossed the target and ended farther away (overshoot).")
+    if assessment.wrong_direction_detected:
+        print("Warning: at least one axis moved away from the target (wrong direction).")
 
 
 def _capture_and_export_adjustment(

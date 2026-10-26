@@ -357,6 +357,38 @@ export interface AdjustmentOutcome {
   delta_e_outcome: string;
 }
 
+export type TrialVerdict = 'IMPROVED' | 'WORSENED' | 'MIXED' | 'UNCHANGED';
+export type AxisChange = 'IMPROVED' | 'UNCHANGED' | 'WORSENED_OVERSHOOT' | 'WORSENED_WRONG_DIRECTION';
+
+export interface AxisAssessment {
+  axis: 'L' | 'A' | 'B';
+  before_delta: number;
+  after_delta: number;
+  change: AxisChange;
+  crossed_target: boolean;
+}
+
+export interface AngleAssessment {
+  angle: RequiredAngle;
+  before_delta_e76: number;
+  after_delta_e76: number;
+  change: 'IMPROVED' | 'WORSENED' | 'UNCHANGED';
+  axes: AxisAssessment[];
+}
+
+export interface TrialAssessment {
+  verdict: TrialVerdict;
+  worst_delta_e_before: number;
+  worst_delta_e_after: number;
+  improved_angles: RequiredAngle[];
+  worsened_angles: RequiredAngle[];
+  overshoot_detected: boolean;
+  wrong_direction_detected: boolean;
+  delta_e_noise: number;
+  axis_noise: number;
+  angles: AngleAssessment[];
+}
+
 export interface Adjustment {
   adjustment_id: string;
   session_id: string;
@@ -382,6 +414,8 @@ export interface Adjustment {
   before_comparison: Comparison | null;
   after_comparison: Comparison | null;
   outcomes: AdjustmentOutcome[] | null;
+  assessment: TrialAssessment | null;
+  operator_disagrees_with_instrument: boolean | null;
   worst_angle_before: RequiredAngle | null;
   worst_angle_after: RequiredAngle | null;
   visual_result: 'BETTER' | 'WORSE' | 'SAME' | 'UNKNOWN' | null;
