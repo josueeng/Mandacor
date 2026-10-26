@@ -36,8 +36,12 @@ describe('trial assessment presentation', () => {
   test('explains only the axes that worsened, distinguishing overshoot from wrong direction', () => {
     const findings = assessmentFindings(assessment).map((item) => item.text);
     expect(findings).toHaveLength(2);
-    expect(findings[0]).toBe('15° L*: passou do ponto (era -1.00, ficou +1.50). Dose excessiva para este eixo.');
-    expect(findings[1]).toBe('45° b*: foi na direção contrária ao alvo (era +0.50, ficou +1.20).');
+    expect(findings[0]).toBe(
+      'Claro / escuro (L*) em 15°: passou do ponto. A amostra estava 1,00 mais escura que o alvo e ficou 1,50 mais clara que o alvo. A dose foi maior que o necessário.',
+    );
+    expect(findings[1]).toBe(
+      'Amarelo / azul (b*) em 45°: foi para o lado errado. A amostra estava 0,50 mais amarela que o alvo e ficou 1,20 mais amarela que o alvo.',
+    );
   });
 
   test('groups angles that share the same problem on the same axis', () => {
@@ -48,7 +52,7 @@ describe('trial assessment presentation', () => {
       ])),
     };
     expect(assessmentFindings(grouped).map((item) => item.text)).toEqual([
-      '15°, 25°, 45° L*: passou do ponto (era +1.20, ficou -2.00 a -1.80). Dose excessiva para este eixo.',
+      'Claro / escuro (L*) em 15°, 25°, 45°: passou do ponto. A amostra estava 1,20 mais clara que o alvo e ficou entre 1,80 e 2,00 mais escura que o alvo. A dose foi maior que o necessário.',
     ]);
   });
 });

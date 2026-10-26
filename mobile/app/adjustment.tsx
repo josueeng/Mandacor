@@ -15,11 +15,12 @@ import {
 } from '@/src/features/adjustments/model';
 import {
   assessmentFindings,
+  COLOR_DIFFERENCE_HELP,
   OPERATOR_DISAGREEMENT_NOTICE,
   presentVerdict,
 } from '@/src/features/adjustments/assessment';
 import { confirmAppliedWithVerification } from '@/src/features/adjustments/workflow';
-import { formatSigned, presentState } from '@/src/presentation/format';
+import { describeChange, formatDecimal, presentAxis, presentLabel, presentState } from '@/src/presentation/format';
 import { useMandacor } from '@/src/state/AppContext';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { Adjustment, FinishType, PaintSystem, TrialAssessment } from '@/src/types/api';
@@ -208,8 +209,10 @@ export default function AdjustmentScreen() {
         <Callout title="DECISÃO DO OPERADOR" tone="warning">{OPERATOR_QUANTITY_NOTICE}</Callout>
         <ErrorNotice message={error} />
         <SectionHeader>CONTEXTO INFORMADO</SectionHeader>
-        <ChoiceRow values={SYSTEMS} selected={form.system} onSelect={(system) => setForm({ ...form, system })} />
-        <ChoiceRow values={FINISHES} selected={form.finish} onSelect={(finish) => setForm({ ...form, finish })} />
+        <Text style={styles.choiceQuestion}>Sistema da tinta</Text>
+        <ChoiceRow values={SYSTEMS} selected={form.system} present={presentLabel} onSelect={(system) => setForm({ ...form, system })} />
+        <Text style={styles.choiceQuestion}>Acabamento</Text>
+        <ChoiceRow values={FINISHES} selected={form.finish} present={presentLabel} onSelect={(finish) => setForm({ ...form, finish })} />
         <SectionHeader>VOLUME REAL ATUAL · ml</SectionHeader>
         <ChoiceRow values={VOLUME_PRESETS} selected={form.volume} onSelect={(volume) => setForm({ ...form, volume })} />
         <Field value={form.volume} onChangeText={(volume) => setForm({ ...form, volume })} placeholder="Ex.: 450 ou 450,0" keyboardType="decimal-pad" />
@@ -267,9 +270,9 @@ export default function AdjustmentScreen() {
       {adjustment.lifecycle === 'APPLIED_WAITING_FOR_AFTER' && (
         <>
           <View style={styles.dangerBox}><Text style={styles.dangerText}>{APPLIED_WARNING}</Text><Text style={styles.dangerSub}>A quantidade já foi registrada como aplicada. Faça somente a leitura AFTER.</Text></View>
-          <TechnicalRow label="TARGET" value={`#${adjustment.target_measurement_id}`} />
-          <TechnicalRow label="BEFORE" value={`#${adjustment.before_measurement_id}`} />
-          {afterOperation && <TechnicalRow label="Espera AFTER" value={afterOperation.status} />}
+          <TechnicalRow label="Leitura da cor alvo" value={`#${adjustment.target_measurement_id}`} />
+          <TechnicalRow label="Leitura antes do ajuste" value={`#${adjustment.before_measurement_id}`} />
+          {afterOperation && <TechnicalRow label="Leitura depois do ajuste" value={presentState(afterOperation.status)} />}
           {(!afterOperation || ['TIMED_OUT', 'CANCELLED', 'FAILED'].includes(afterOperation.status)) && (
             <ActionButton label={afterOperation?.status === 'TIMED_OUT' ? 'TENTAR DETECTAR AFTER NOVAMENTE' : 'PREPARAR LEITURA AFTER'} onPress={() => void app.startAfterCapture(adjustment.adjustment_id, Boolean(afterOperation))} disabled={!app.instrument.connected || app.busy} />
           )}
@@ -282,9 +285,11 @@ export default function AdjustmentScreen() {
       {adjustment.lifecycle === 'COMPLETED' && <CompletedResult adjustment={adjustment} />}
       {adjustment.lifecycle === 'COMPLETED' && (
         <Card tone="info">
-          <SectionHeader>FEEDBACK DO OPERADOR</SectionHeader>
-          <ChoiceRow values={['BETTER', 'WORSE', 'SAME', 'UNKNOWN'] as const} selected={visualResult} onSelect={setVisualResult} />
-          <ChoiceRow values={['IN_PROGRESS', 'ACCEPTED', 'REJECTED', 'UNKNOWN'] as const} selected={operatorStatus} onSelect={setOperatorStatus} />
+          <SectionHeader>SUA AVALIAÇÃO</SectionHeader>
+          <Text style={styles.choiceQuestion}>Visualmente, comparado a antes do ajuste, a cor ficou:</Text>
+          <ChoiceRow values={['BETTER', 'WORSE', 'SAME', 'UNKNOWN'] as const} selected={visualResult} present={(value) => presentLabel(value, 'NÃO SEI')} onSelect={setVisualResult} />
+          <Text style={styles.choiceQuestion}>Situação da cor:</Text>
+          <ChoiceRow values={['IN_PROGRESS', 'ACCEPTED', 'REJECTED', 'UNKNOWN'] as const} selected={operatorStatus} present={presentLabel} onSelect={setOperatorStatus} />
           {contradictsInstrument(adjustment.assessment, visualResult) && (
             <Callout title="DIVERGÊNCIA COM O INSTRUMENTO" tone="warning">{OPERATOR_DISAGREEMENT_NOTICE}</Callout>
           )}
@@ -320,10 +325,10 @@ export default function AdjustmentScreen() {
 function AdjustmentSummary({ values }: { values: Pick<Adjustment, 'system' | 'finish' | 'volume_ml' | 'components' | 'operator_reason'> | ReturnType<typeof buildAdjustmentPayload> }) {
   if (!values) return null;
   return <Card>
-    <TechnicalRow label="Sistema" value={values.system} />
-    <TechnicalRow label="Acabamento" value={values.finish} />
-    <TechnicalRow label="Volume" value={`${values.volume_ml} ml`} />
-    {values.components.map((item) => <TechnicalRow key={item.pigment_code} label={item.pigment_code} value={`${item.quantity_g} g`} />)}
+    <TechnicalRow label="Sistema da tinta" value={presentLabel(values.system)} />
+    <TechnicalRow label="Acabamento" value={presentLabel(values.finish)} />
+    <TechnicalRow label="Volume de tinta" value={`${values.volume_ml.replace('.', ',')} ml`} />
+    {values.components.map((item) => <TechnicalRow key={item.pigment_code} label={`Pigmento ${item.pigment_code}`} value={`${item.quantity_g.replace('.', ',')} g`} />)}
     <Text style={uiStyles.muted}>Motivo: {values.operator_reason}</Text>
   </Card>;
 }
@@ -332,31 +337,31 @@ function CompletedResult({ adjustment }: { adjustment: Adjustment }) {
   const result = completedResultData(adjustment);
   if (!result) return null;
   return <>
-    <SectionHeader>CADEIA EXPERIMENTAL</SectionHeader>
+    <SectionHeader>O QUE MUDOU EM CADA ÂNGULO</SectionHeader>
+    <Text style={uiStyles.muted}>Mudança causada pelo ajuste (leitura depois comparada com a leitura antes).</Text>
+    {result.outcomes.map((item) => {
+      const response = result.observedResponse.find((value) => value.angle === item.angle);
+      return <Card key={item.angle}>
+        <Text style={styles.angle}>{item.angle}° · {presentLabel(item.delta_e_outcome)}</Text>
+        <TechnicalRow
+          label="Diferença de cor até o alvo (ΔE)"
+          value={`${formatDecimal(item.before_delta_e76)} → ${formatDecimal(item.after_delta_e76)}`}
+        />
+        {response && <>
+          <TechnicalRow label={presentAxis('L')} value={describeChange('L', response.response_l)} />
+          <TechnicalRow label={presentAxis('A')} value={describeChange('A', response.response_a)} />
+          <TechnicalRow label={presentAxis('B')} value={describeChange('B', response.response_b)} />
+        </>}
+      </Card>;
+    })}
+    <SectionHeader>LEITURAS USADAS</SectionHeader>
     <Card>
-      <TechnicalRow label="TARGET" value={`#${result.targetMeasurementId}`} />
-      <TechnicalRow label="BEFORE" value={`#${result.beforeMeasurementId}`} />
-      <TechnicalRow label="AFTER" value={`#${result.afterMeasurementId}`} />
-      <TechnicalRow label="Pior ângulo antes" value={`${result.worstAngleBefore}°`} />
-      <TechnicalRow label="Pior ângulo depois" value={`${result.worstAngleAfter}°`} />
+      <TechnicalRow label="Cor alvo" value={`#${result.targetMeasurementId}`} />
+      <TechnicalRow label="Amostra antes do ajuste" value={`#${result.beforeMeasurementId}`} />
+      <TechnicalRow label="Amostra depois do ajuste" value={`#${result.afterMeasurementId}`} />
+      <TechnicalRow label="Ângulo mais diferente antes" value={`${result.worstAngleBefore}°`} />
+      <TechnicalRow label="Ângulo mais diferente depois" value={`${result.worstAngleAfter}°`} />
     </Card>
-    <SectionHeader>RESPOSTA OBSERVADA · AFTER − BEFORE</SectionHeader>
-    {result.observedResponse.map((item) => <Card key={item.angle}>
-      <Text style={styles.angle}>{item.angle}°</Text>
-      <TechnicalRow label="Resposta L*" value={formatSigned(item.response_l)} />
-      <TechnicalRow label="Resposta a*" value={formatSigned(item.response_a)} />
-      <TechnicalRow label="Resposta b*" value={formatSigned(item.response_b)} />
-    </Card>)}
-    <SectionHeader>RESULTADO VS. TARGET</SectionHeader>
-    {result.outcomes.map((item) => <Card key={item.angle}>
-      <Text style={styles.angle}>{item.angle}° · {item.delta_e_outcome}</Text>
-      <TechnicalRow label="ΔE antes" value={item.before_delta_e76.toFixed(3)} />
-      <TechnicalRow label="ΔE depois" value={item.after_delta_e76.toFixed(3)} />
-      <TechnicalRow label="Variação de erro" value={formatSigned(item.delta_e_improvement)} />
-      <TechnicalRow label="L*" value={item.lightness_outcome} />
-      <TechnicalRow label="a*" value={item.red_green_outcome} />
-      <TechnicalRow label="b*" value={item.yellow_blue_outcome} />
-    </Card>)}
   </>;
 }
 
@@ -375,24 +380,25 @@ function VerdictCard({ assessment }: { assessment: TrialAssessment }) {
     <Text style={[styles.verdictTitle, { color: accent }]}>{verdict.title}</Text>
     <Text style={styles.verdictDescription}>{verdict.description}</Text>
     <TechnicalRow
-      label="Maior ΔE"
-      value={`${assessment.worst_delta_e_before.toFixed(2)} → ${assessment.worst_delta_e_after.toFixed(2)}`}
+      label="Diferença de cor no pior ângulo (ΔE)"
+      value={`${formatDecimal(assessment.worst_delta_e_before)} → ${formatDecimal(assessment.worst_delta_e_after)}`}
     />
+    <Text style={uiStyles.muted}>{COLOR_DIFFERENCE_HELP}</Text>
     {assessment.worsened_angles.length > 0 && (
-      <TechnicalRow label="Pioraram" value={assessment.worsened_angles.map((angle) => `${angle}°`).join(' · ')} />
+      <TechnicalRow label="Ângulos que pioraram" value={assessment.worsened_angles.map((angle) => `${angle}°`).join(' · ')} />
     )}
     {assessment.improved_angles.length > 0 && (
-      <TechnicalRow label="Melhoraram" value={assessment.improved_angles.map((angle) => `${angle}°`).join(' · ')} />
+      <TechnicalRow label="Ângulos que melhoraram" value={assessment.improved_angles.map((angle) => `${angle}°`).join(' · ')} />
     )}
     {findings.map((item) => <Text key={item.key} style={styles.verdictFinding}>• {item.text}</Text>)}
     <Text style={uiStyles.muted}>
-      Variações abaixo de {assessment.delta_e_noise.toFixed(2)} ΔE são tratadas como ruído. Esta análise não depende do feedback visual.
+      Mudanças menores que {formatDecimal(assessment.delta_e_noise)} na diferença de cor são tratadas como variação normal da medição. Esta análise usa só as leituras do instrumento, não a sua avaliação visual.
     </Text>
   </Card>;
 }
 
-function ChoiceRow<T extends string>({ values, selected, onSelect }: { values: readonly T[]; selected: string; onSelect: (value: T) => void }) {
-  return <View style={styles.choices}>{values.map((value) => <Pressable key={value} onPress={() => onSelect(value)} style={[styles.choice, selected === value && styles.choiceSelected]}><Text style={[styles.choiceText, selected === value && styles.choiceTextSelected]}>{value}</Text></Pressable>)}</View>;
+function ChoiceRow<T extends string>({ values, selected, onSelect, present = (value) => value }: { values: readonly T[]; selected: string; onSelect: (value: T) => void; present?: (value: T) => string }) {
+  return <View style={styles.choices}>{values.map((value) => <Pressable key={value} accessibilityRole="button" onPress={() => onSelect(value)} style={[styles.choice, selected === value && styles.choiceSelected]}><Text style={[styles.choiceText, selected === value && styles.choiceTextSelected]}>{present(value)}</Text></Pressable>)}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -410,6 +416,7 @@ const styles = StyleSheet.create({
   modalTitle: { color: colors.warning, fontSize: 22, fontWeight: '900' },
   modalText: { color: colors.textPrimary, fontSize: 16, lineHeight: 24 },
   angle: { color: colors.textPrimary, fontSize: 19, fontWeight: '900' },
+  choiceQuestion: { color: colors.textPrimary, fontSize: 15, fontWeight: '800' },
   verdictEyebrow: { color: colors.textSecondary, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
   verdictTitle: { fontSize: 26, fontWeight: '900' },
   verdictDescription: { color: colors.textPrimary, fontSize: 15, lineHeight: 22 },

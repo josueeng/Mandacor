@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { describeDeviation } from '@/src/presentation/format';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { LabAngle, REQUIRED_ANGLES, RequiredAngle } from '@/src/types/api';
 
@@ -93,10 +94,10 @@ export function ColorPlaneChart({
         <View style={styles.origin} />
         <Text style={styles.originLabel}>ALVO · 0</Text>
 
-        <Text style={[styles.axisLabel, styles.yellowLabel]}>Δb* · MAIS AMARELA</Text>
-        <Text style={[styles.axisLabel, styles.blueLabel]}>Δb* · MAIS AZUL</Text>
-        <Text style={[styles.axisLabel, styles.greenLabel]}>Δa* · MAIS VERDE</Text>
-        <Text style={[styles.axisLabel, styles.redLabel]}>Δa* · MAIS VERMELHA</Text>
+        <Text style={[styles.axisLabel, styles.yellowLabel]}>MAIS AMARELA (b*)</Text>
+        <Text style={[styles.axisLabel, styles.blueLabel]}>MAIS AZUL (b*)</Text>
+        <Text style={[styles.axisLabel, styles.greenLabel]}>MAIS VERDE (a*)</Text>
+        <Text style={[styles.axisLabel, styles.redLabel]}>MAIS VERMELHA (a*)</Text>
 
         <PlotPoint
           label="T"
@@ -177,10 +178,8 @@ function LightnessScale({
       style={styles.lightness}
     >
       <View style={styles.lightnessHeader}>
-        <Text style={styles.lightnessTitle}>L* · LUMINOSIDADE</Text>
-        <Text style={styles.lightnessDelta}>
-          ΔL {delta >= 0 ? '+' : ''}{delta.toFixed(3)}
-        </Text>
+        <Text style={styles.lightnessTitle}>CLARO / ESCURO (L*)</Text>
+        <Text style={styles.lightnessDelta}>{describeDeviation('L', delta)}</Text>
       </View>
       <View style={styles.lightnessTrackArea}>
         <View style={styles.lightnessTrack} />

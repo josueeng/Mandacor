@@ -20,7 +20,7 @@ import {
   assessElongation,
   configuredElongationTolerance,
 } from '@/src/features/results/elongation';
-import { presentAction, presentDirection } from '@/src/presentation/format';
+import { describeDeviation, formatDecimal, presentAction, presentAxis, presentDirection, presentLabel } from '@/src/presentation/format';
 import { useMandacor } from '@/src/state/AppContext';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import {
@@ -145,12 +145,12 @@ export default function ResultsScreen() {
           </Text>
           <View style={styles.elongationMetrics}>
             <View style={styles.elongationMetric}>
-              <Text style={styles.elongationMetricLabel}>VARIAÇÃO</Text>
-              <Text style={styles.elongationMetricValue}>{elongation.variation.toFixed(2)} ΔL*</Text>
+              <Text style={styles.elongationMetricLabel}>DIFERENÇA DE CLARO/ESCURO ENTRE ÂNGULOS</Text>
+              <Text style={styles.elongationMetricValue}>{formatDecimal(elongation.variation)}</Text>
             </View>
             <View style={styles.elongationMetric}>
-              <Text style={styles.elongationMetricLabel}>LIMITE ATUAL</Text>
-              <Text style={styles.elongationMetricValue}>≤ {elongation.tolerance.toFixed(2)} ΔL*</Text>
+              <Text style={styles.elongationMetricLabel}>LIMITE PERMITIDO</Text>
+              <Text style={styles.elongationMetricValue}>até {formatDecimal(elongation.tolerance)}</Text>
             </View>
           </View>
           <Text style={uiStyles.muted}>
@@ -161,29 +161,31 @@ export default function ResultsScreen() {
 
       {diagnosis && worst && (
         <Card tone="warning">
-          <SectionHeader>MAIOR DESVIO</SectionHeader>
+          <SectionHeader>ÂNGULO MAIS DIFERENTE DO ALVO</SectionHeader>
           <View style={styles.worstHero}>
             <View>
               <Text style={styles.worstLabel}>ÂNGULO</Text>
               <Text style={styles.worst}>{diagnosis.worst_angle}°</Text>
             </View>
             <View style={styles.worstMetric}>
-              <Text style={styles.worstLabel}>ΔE76</Text>
-              <Text style={styles.worstValue}>{worst.delta_e76.toFixed(3)}</Text>
+              <Text style={styles.worstLabel}>DIFERENÇA DE COR (ΔE)</Text>
+              <Text style={styles.worstValue}>{formatDecimal(worst.delta_e76)}</Text>
             </View>
           </View>
           <TechnicalRow
-            label="Dominante"
-            value={diagnosis.angles.find((item) => item.angle === diagnosis.worst_angle)?.dominant_axis ?? '—'}
+            label="Maior causa da diferença"
+            value={presentAxis(diagnosis.angles.find((item) => item.angle === diagnosis.worst_angle)?.dominant_axis ?? '—')}
           />
-          <Text style={uiStyles.muted}>Indicador de maior magnitude; não representa aprovação ou reprovação.</Text>
+          <Text style={uiStyles.muted}>
+            Diferença de cor (ΔE) é a distância total entre a amostra e o alvo: 0 = idêntica, quanto maior, mais diferente. Não representa aprovação ou reprovação.
+          </Text>
         </Card>
       )}
 
       {selectedTarget && selectedSample && (
         <Card tone="info">
-          <SectionHeader>MAPA DE COR · a* × b*</SectionHeader>
-          <Text style={uiStyles.muted}>O alvo é o ponto zero. O marcador mostra somente como está a amostra.</Text>
+          <SectionHeader>MAPA DE COR</SectionHeader>
+          <Text style={uiStyles.muted}>Eixo horizontal: verde ↔ vermelho (a*). Eixo vertical: azul ↔ amarelo (b*). O alvo é o centro; o marcador mostra onde está a amostra.</Text>
           <ColorPlaneChart
             selectedAngle={selectedAngle}
             onSelectAngle={setSelectedAngle}
@@ -199,10 +201,11 @@ export default function ResultsScreen() {
             </View>
           )}
           {selectedDelta && (
-            <View style={styles.deltaStrip}>
-              <Text style={styles.deltaText}>Δa {selectedDelta.delta_a >= 0 ? '+' : ''}{selectedDelta.delta_a.toFixed(3)}</Text>
-              <Text style={styles.deltaText}>Δb {selectedDelta.delta_b >= 0 ? '+' : ''}{selectedDelta.delta_b.toFixed(3)}</Text>
-              <Text style={styles.deltaText}>ΔE {selectedDelta.delta_e76.toFixed(3)}</Text>
+            <View>
+              <TechnicalRow label={presentAxis('L')} value={describeDeviation('L', selectedDelta.delta_l)} />
+              <TechnicalRow label={presentAxis('A')} value={describeDeviation('A', selectedDelta.delta_a)} />
+              <TechnicalRow label={presentAxis('B')} value={describeDeviation('B', selectedDelta.delta_b)} />
+              <TechnicalRow label="Diferença de cor (ΔE)" value={formatDecimal(selectedDelta.delta_e76)} />
             </View>
           )}
         </Card>
@@ -224,8 +227,8 @@ export default function ResultsScreen() {
           <SummaryCard title="45°" values={correction.mid} presenter={presentAction} />
           <SummaryCard title="FLOP" values={correction.flop} presenter={presentAction} />
           <Card>
-            <TechnicalRow label="Questão principal" value={`${correction.primary_issue.angle}° · ${correction.primary_issue.axis}`} />
-            <TechnicalRow label="Ação" value={correction.primary_issue.action ? presentAction(correction.primary_issue.action) : 'SEM AÇÃO'} />
+            <TechnicalRow label="Problema principal" value={`${correction.primary_issue.angle}° · ${presentAxis(correction.primary_issue.axis)}`} />
+            <TechnicalRow label="O que fazer" value={correction.primary_issue.action ? presentAction(correction.primary_issue.action) : 'SEM AÇÃO'} />
           </Card>
         </>
       )}
@@ -274,9 +277,9 @@ function SummaryCard({
   return (
     <Card tone="info">
       <Text style={styles.angleTitle}>{title}</Text>
-      <TechnicalRow label="L*" value={presenter(values.lightness)} />
-      <TechnicalRow label="a*" value={presenter(values.red_green)} />
-      <TechnicalRow label="b*" value={presenter(values.yellow_blue)} />
+      <TechnicalRow label={presentAxis('L')} value={presenter(values.lightness)} />
+      <TechnicalRow label={presentAxis('A')} value={presenter(values.red_green)} />
+      <TechnicalRow label={presentAxis('B')} value={presenter(values.yellow_blue)} />
     </Card>
   );
 }
@@ -303,7 +306,7 @@ function ChoiceRow<T extends string>({
             onPress={() => onSelect(value)}
             style={[styles.choice, selected === value && styles.choiceSelected]}
           >
-            {value}
+            {presentLabel(value)}
           </Text>
         ))}
       </View>
@@ -313,18 +316,18 @@ function ChoiceRow<T extends string>({
 
 function CandidateCard({ item, rejected = false }: { item: PigmentCandidate; rejected?: boolean }) {
   const assessment = (values: PigmentCandidate['matched_needs']) =>
-    values.length ? values.map((value) => `${value.angle}° ${value.axis}: ${value.need}`).join(' · ') : '—';
+    values.length ? values.map((value) => `${value.angle}° ${presentAxis(value.axis)}: ${presentAction(value.need)}`).join(' · ') : '—';
   return (
     <Card>
       <Text style={[styles.candidateCode, rejected && { color: colors.danger }]}>{item.pigment_code}</Text>
-      <TechnicalRow label="Status" value={item.status} />
+      <TechnicalRow label="Avaliação" value={presentLabel(item.status)} />
       <Text style={styles.detailLabel}>AJUDA EM</Text>
       <Text style={uiStyles.muted}>{assessment(item.matched_needs)}</Text>
       <Text style={styles.detailLabel}>CONFLITA EM</Text>
       <Text style={uiStyles.muted}>{assessment(item.conflicts)}</Text>
       <Text style={styles.detailLabel}>RISCOS</Text>
-      <Text style={uiStyles.muted}>{item.risks.join(' · ') || '—'}</Text>
-      <Text style={styles.detailLabel}>DESCONHECIDO</Text>
+      <Text style={uiStyles.muted}>{item.risks.map((risk) => presentLabel(risk)).join(' · ') || '—'}</Text>
+      <Text style={styles.detailLabel}>EFEITO DESCONHECIDO EM</Text>
       <Text style={uiStyles.muted}>{assessment(item.unknown_effects)}</Text>
       <Text style={styles.detailLabel}>MOTIVO</Text>
       <Text style={uiStyles.muted}>{[...item.contraindications, ...item.rationale].join(' · ') || '—'}</Text>
@@ -363,8 +366,6 @@ const styles = StyleSheet.create({
   worst: { color: colors.textPrimary, fontSize: 40, fontWeight: '900' },
   worstMetric: { alignItems: 'flex-end' },
   worstValue: { color: colors.warning, fontFamily: 'SpaceMono', fontSize: 24 },
-  deltaStrip: { flexDirection: 'row', justifyContent: 'space-between' },
-  deltaText: { color: colors.technical, fontFamily: 'SpaceMono', fontSize: 11 },
   sampleSummary: { backgroundColor: '#102437', borderRadius: radius.sm, gap: 4, padding: spacing.sm },
   sampleSummaryLabel: { color: colors.technical, fontSize: 10, fontWeight: '900', letterSpacing: 0.6 },
   sampleSummaryText: { color: colors.textPrimary, fontSize: 14, fontWeight: '900', lineHeight: 20, textAlign: 'center' },
