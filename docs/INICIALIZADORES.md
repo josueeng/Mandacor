@@ -52,4 +52,4 @@ As portas padrão são `8000` para o backend e `8081` para o Expo. Para uma exec
 
 ## Uso diário na loja
 
-Para que a API inicie sozinha com o computador, sem abrir o inicializador, instale-a como serviço com `INSTALAR_SERVICO_LINUX.sh`. O passo a passo completo, incluindo o app instalado como APK e o acesso fora da loja, está em `docs/IMPLANTACAO_LOJA.md`.
+Para que a API inicie sozinha com o computador, sem abrir o inicializador, instale-a como serviço com `INSTALAR_SERVICO_WINDOWS.bat` (Windows) ou `INSTALAR_SERVICO_LINUX.sh` (Linux). O passo a passo completo, incluindo o app instalado como APK e o acesso fora da loja, está em `docs/IMPLANTACAO_LOJA.md`.

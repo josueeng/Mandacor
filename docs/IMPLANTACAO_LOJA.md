@@ -15,13 +15,30 @@ Celular (app MANDACOR) ──Wi‑Fi da loja──> PC da bancada (API :8000) �
 - Reserve um IP fixo para o PC no roteador (opção "reserva de DHCP" / "IP fixo por MAC"). Sem isso o endereço pode mudar e o app perde o servidor.
 - Desative a suspensão automática do PC.
 
-## 2. Instalar a API como serviço (Linux)
+## 2. Instalar a API como serviço
+
+### Windows
+
+Dê dois cliques em `INSTALAR_SERVICO_WINDOWS.bat` e aceite o pedido de administrador. O script:
+
+- cria o ambiente Python (`.venv-windows`) e instala as dependências, se necessário;
+- libera a porta 8000 e o Python no Firewall do Windows, somente em redes privadas;
+- registra a tarefa agendada **MANDACOR API**, que inicia com o Windows mesmo sem login, roda também na bateria e reinicia a API se ela cair;
+- mostra o endereço para configurar no app.
+
+A rede da loja precisa estar marcada como **Privada** no Windows (Configurações > Rede e Internet > propriedades da rede). Em rede Pública o firewall bloqueia o celular; o script avisa quando detecta isso.
+
+- Ver o log: `logs\backend-servico.log` na pasta do projeto
+- Reiniciar: no Agendador de Tarefas, clique com o botão direito em **MANDACOR API** > Finalizar e depois Executar, ou rode o instalador de novo
+- Remover: `INSTALAR_SERVICO_WINDOWS.bat remover` no Prompt de Comando, dentro da pasta do projeto
+
+### Linux
 
 ```bash
 ./INSTALAR_SERVICO_LINUX.sh
 ```
 
-O script cria o ambiente Python se necessário, instala as dependências, registra o serviço `mandacor` no systemd e mostra o endereço para configurar no app. A API passa a iniciar sozinha com o computador e reinicia em caso de falha.
+O script cria o ambiente Python se necessário, instala as dependências, registra o serviço `mandacor` no systemd e mostra o endereço para configurar no app.
 
 - Ver o log: `journalctl -u mandacor -f`
 - Reiniciar: `sudo systemctl restart mandacor`
@@ -29,7 +46,9 @@ O script cria o ambiente Python se necessário, instala as dependências, regist
 
 Se o firewall estiver ativo, libere a porta 8000 apenas para a rede local, por exemplo `sudo ufw allow from 192.168.1.0/24 to any port 8000 proto tcp`.
 
-Não use o inicializador `INICIAR_MANDACOR_LINUX.sh` ao mesmo tempo que o serviço: os dois usam a porta 8000.
+### Inicializadores
+
+Com o serviço instalado, os inicializadores `INICIAR_MANDACOR_*` continuam funcionando para desenvolvimento: eles encontram a API já ativa e abrem somente o Expo.
 
 ## 3. Instalar o app no celular (APK)
 
