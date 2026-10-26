@@ -251,6 +251,7 @@ export default function AdjustmentScreen() {
       <TechnicalRow label="ID" value={`${adjustment.adjustment_id.slice(0, 8)}…`} />
       <TechnicalRow label="Estado" value={presentState(adjustment.lifecycle)} />
       <ErrorNotice message={error ?? app.errorMessage} />
+      {adjustment.lifecycle === 'COMPLETED' && adjustment.assessment && <VerdictCard assessment={adjustment.assessment} />}
       <AdjustmentSummary values={adjustment} />
       <Callout title="QUANTIDADE INFORMADA" tone="warning">{OPERATOR_QUANTITY_NOTICE}</Callout>
 
@@ -331,7 +332,6 @@ function CompletedResult({ adjustment }: { adjustment: Adjustment }) {
   const result = completedResultData(adjustment);
   if (!result) return null;
   return <>
-    {adjustment.assessment && <VerdictCard assessment={adjustment.assessment} />}
     <SectionHeader>CADEIA EXPERIMENTAL</SectionHeader>
     <Card>
       <TechnicalRow label="TARGET" value={`#${result.targetMeasurementId}`} />

@@ -37,25 +37,37 @@ export function presentVerdict(verdict: TrialVerdict) {
   return VERDICTS[verdict];
 }
 
-function describeAxis(angle: number, axis: AxisAssessment): string | null {
-  const values = `era ${formatSigned(axis.before_delta, 2)}, ficou ${formatSigned(axis.after_delta, 2)}`;
-  const label = `${angle}° ${AXIS_LABEL[axis.axis]}`;
-  if (axis.change === 'WORSENED_OVERSHOOT') {
-    return `${label}: passou do ponto (${values}). Dose excessiva para este eixo.`;
-  }
-  if (axis.change === 'WORSENED_WRONG_DIRECTION') {
-    return `${label}: foi na direção contrária ao alvo (${values}).`;
-  }
-  return null;
+function range(values: number[]): string {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  return min === max ? formatSigned(min, 2) : `${formatSigned(min, 2)} a ${formatSigned(max, 2)}`;
 }
 
-/** Lists every axis that worsened, so the operator sees why the instrument judged it worse. */
+/**
+ * Lists every axis that worsened, grouping angles with the same problem, so the operator
+ * sees why the instrument judged it worse.
+ */
 export function assessmentFindings(assessment: TrialAssessment): AssessmentFinding[] {
-  return assessment.angles.flatMap((angle) =>
-    angle.axes.flatMap((axis) => {
-      const text = describeAxis(angle.angle, axis);
-      return text ? [{ key: `${angle.angle}-${axis.axis}`, text }] : [];
-    }));
+  const groups = new Map<string, { axis: AxisAssessment['axis']; change: AxisAssessment['change']; angles: number[]; before: number[]; after: number[] }>();
+  for (const angle of assessment.angles) {
+    for (const axis of angle.axes) {
+      if (axis.change !== 'WORSENED_OVERSHOOT' && axis.change !== 'WORSENED_WRONG_DIRECTION') continue;
+      const key = `${axis.axis}-${axis.change}`;
+      const group = groups.get(key) ?? { axis: axis.axis, change: axis.change, angles: [], before: [], after: [] };
+      group.angles.push(angle.angle);
+      group.before.push(axis.before_delta);
+      group.after.push(axis.after_delta);
+      groups.set(key, group);
+    }
+  }
+  return [...groups.entries()].map(([key, group]) => {
+    const label = `${group.angles.map((angle) => `${angle}°`).join(', ')} ${AXIS_LABEL[group.axis]}`;
+    const values = `era ${range(group.before)}, ficou ${range(group.after)}`;
+    const text = group.change === 'WORSENED_OVERSHOOT'
+      ? `${label}: passou do ponto (${values}). Dose excessiva para este eixo.`
+      : `${label}: foi na direção contrária ao alvo (${values}).`;
+    return { key, text };
+  });
 }
 
 export const OPERATOR_DISAGREEMENT_NOTICE =

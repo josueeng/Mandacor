@@ -39,4 +39,16 @@ describe('trial assessment presentation', () => {
     expect(findings[0]).toBe('15° L*: passou do ponto (era -1.00, ficou +1.50). Dose excessiva para este eixo.');
     expect(findings[1]).toBe('45° b*: foi na direção contrária ao alvo (era +0.50, ficou +1.20).');
   });
+
+  test('groups angles that share the same problem on the same axis', () => {
+    const grouped: TrialAssessment = {
+      ...assessment,
+      angles: [15, 25, 45].map((value) => angle(value as AngleAssessment['angle'], [
+        { axis: 'L', before_delta: 1.2, after_delta: value === 45 ? -1.8 : -2, change: 'WORSENED_OVERSHOOT', crossed_target: true },
+      ])),
+    };
+    expect(assessmentFindings(grouped).map((item) => item.text)).toEqual([
+      '15°, 25°, 45° L*: passou do ponto (era +1.20, ficou -2.00 a -1.80). Dose excessiva para este eixo.',
+    ]);
+  });
 });
