@@ -1,0 +1,28 @@
+{
+  "name": "mandacor-video-propaganda",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Vídeo de propaganda do MANDACOR feito com Remotion",
+  "scripts": {
+    "studio": "remotion studio",
+    "render:30s": "remotion render Completa out/mandacor-30s.mp4 --codec=h264 --audio-codec=aac",
+    "render:15s": "remotion render Curta out/mandacor-15s.mp4 --codec=h264 --audio-codec=aac",
+    "render": "npm run render:30s && npm run render:15s",
+    "voz": "python scripts/gerar_voz.py",
+    "audio": "python scripts/gerar_audio.py",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.537",
+    "@remotion/fonts": "4.0.537",
+    "@remotion/media-utils": "4.0.537",
+    "@remotion/transitions": "4.0.537",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.537"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "typescript": "5.9.3"
+  }
+}

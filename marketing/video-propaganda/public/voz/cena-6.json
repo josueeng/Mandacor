@@ -1,0 +1,57 @@
+{
+  "texto": "MANDACOR. A cor certa com menos tentativa. Chama no WhatsApp.",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "MANDACOR",
+      "inicio": 0.098,
+      "fim": 0.729
+    },
+    {
+      "texto": "A",
+      "inicio": 1.548,
+      "fim": 1.655
+    },
+    {
+      "texto": "cor",
+      "inicio": 1.667,
+      "fim": 1.881
+    },
+    {
+      "texto": "certa",
+      "inicio": 1.893,
+      "fim": 2.286
+    },
+    {
+      "texto": "com",
+      "inicio": 2.298,
+      "fim": 2.429
+    },
+    {
+      "texto": "menos",
+      "inicio": 2.44,
+      "fim": 2.75
+    },
+    {
+      "texto": "tentativa",
+      "inicio": 2.762,
+      "fim": 3.405
+    },
+    {
+      "texto": "Chama",
+      "inicio": 4.226,
+      "fim": 4.583
+    },
+    {
+      "texto": "no",
+      "inicio": 4.595,
+      "fim": 4.691
+    },
+    {
+      "texto": "WhatsApp",
+      "inicio": 4.702,
+      "fim": 5.417
+    }
+  ]
+}

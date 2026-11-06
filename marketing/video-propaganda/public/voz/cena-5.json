@@ -1,0 +1,62 @@
+{
+  "texto": "E guarda cada ajuste, pra loja não perder o que aprendeu.",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "E",
+      "inicio": 0.098,
+      "fim": 0.205
+    },
+    {
+      "texto": "guarda",
+      "inicio": 0.217,
+      "fim": 0.598
+    },
+    {
+      "texto": "cada",
+      "inicio": 0.61,
+      "fim": 0.836
+    },
+    {
+      "texto": "ajuste",
+      "inicio": 0.848,
+      "fim": 1.324
+    },
+    {
+      "texto": "pra",
+      "inicio": 1.55,
+      "fim": 1.74
+    },
+    {
+      "texto": "loja",
+      "inicio": 1.752,
+      "fim": 2.11
+    },
+    {
+      "texto": "não",
+      "inicio": 2.121,
+      "fim": 2.252
+    },
+    {
+      "texto": "perder",
+      "inicio": 2.264,
+      "fim": 2.633
+    },
+    {
+      "texto": "o",
+      "inicio": 2.645,
+      "fim": 2.693
+    },
+    {
+      "texto": "que",
+      "inicio": 2.705,
+      "fim": 2.788
+    },
+    {
+      "texto": "aprendeu",
+      "inicio": 2.8,
+      "fim": 3.312
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "texto": "E guarda cada ajuste no histórico.",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "E",
+      "inicio": 0.098,
+      "fim": 0.205
+    },
+    {
+      "texto": "guarda",
+      "inicio": 0.217,
+      "fim": 0.645
+    },
+    {
+      "texto": "cada",
+      "inicio": 0.657,
+      "fim": 0.883
+    },
+    {
+      "texto": "ajuste",
+      "inicio": 0.895,
+      "fim": 1.3
+    },
+    {
+      "texto": "no",
+      "inicio": 1.312,
+      "fim": 1.383
+    },
+    {
+      "texto": "histórico",
+      "inicio": 1.395,
+      "fim": 1.919
+    }
+  ]
+}

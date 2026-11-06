@@ -1,0 +1,27 @@
+{
+  "texto": "Acertar cor no olho?",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "Acertar",
+      "inicio": 0.098,
+      "fim": 0.693
+    },
+    {
+      "texto": "cor",
+      "inicio": 0.705,
+      "fim": 0.943
+    },
+    {
+      "texto": "no",
+      "inicio": 0.955,
+      "fim": 1.098
+    },
+    {
+      "texto": "olho",
+      "inicio": 1.11,
+      "fim": 1.371
+    }
+  ]
+}

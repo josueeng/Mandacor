@@ -1,0 +1,62 @@
+{
+  "texto": "O MANDACOR lê os 5 ângulos e explica na língua da bancada.",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "O",
+      "inicio": 0.098,
+      "fim": 0.193
+    },
+    {
+      "texto": "MANDACOR",
+      "inicio": 0.205,
+      "fim": 0.8
+    },
+    {
+      "texto": "lê",
+      "inicio": 0.812,
+      "fim": 0.967
+    },
+    {
+      "texto": "os",
+      "inicio": 0.979,
+      "fim": 1.11
+    },
+    {
+      "texto": "5 ângulos",
+      "inicio": 1.121,
+      "fim": 1.764
+    },
+    {
+      "texto": "e",
+      "inicio": 1.776,
+      "fim": 1.86
+    },
+    {
+      "texto": "explica",
+      "inicio": 1.871,
+      "fim": 2.288
+    },
+    {
+      "texto": "na",
+      "inicio": 2.3,
+      "fim": 2.383
+    },
+    {
+      "texto": "língua",
+      "inicio": 2.395,
+      "fim": 2.705
+    },
+    {
+      "texto": "da",
+      "inicio": 2.717,
+      "fim": 2.788
+    },
+    {
+      "texto": "bancada",
+      "inicio": 2.8,
+      "fim": 3.288
+    }
+  ]
+}

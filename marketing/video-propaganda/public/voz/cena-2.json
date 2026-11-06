@@ -1,0 +1,62 @@
+{
+  "texto": "No metálico, o que fica bom de frente erra no flop.",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "No",
+      "inicio": 0.098,
+      "fim": 0.229
+    },
+    {
+      "texto": "metálico",
+      "inicio": 0.24,
+      "fim": 0.836
+    },
+    {
+      "texto": "o",
+      "inicio": 1.098,
+      "fim": 1.181
+    },
+    {
+      "texto": "que",
+      "inicio": 1.193,
+      "fim": 1.348
+    },
+    {
+      "texto": "fica",
+      "inicio": 1.36,
+      "fim": 1.657
+    },
+    {
+      "texto": "bom",
+      "inicio": 1.669,
+      "fim": 1.895
+    },
+    {
+      "texto": "de",
+      "inicio": 1.907,
+      "fim": 2.014
+    },
+    {
+      "texto": "frente",
+      "inicio": 2.026,
+      "fim": 2.431
+    },
+    {
+      "texto": "erra",
+      "inicio": 2.443,
+      "fim": 2.669
+    },
+    {
+      "texto": "no",
+      "inicio": 2.681,
+      "fim": 2.776
+    },
+    {
+      "texto": "flop",
+      "inicio": 2.788,
+      "fim": 3.133
+    }
+  ]
+}

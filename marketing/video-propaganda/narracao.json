@@ -1,0 +1,19 @@
+{
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "completa": {
+    "1": "Quantas tentativas até acertar a cor?",
+    "2": "No metálico, o que fica bom de frente erra no flop.",
+    "3": "O MANDACOR lê o espectrofotômetro e explica a diferença na língua da bancada.",
+    "4": "Ajustou? Ele mede de novo e diz se melhorou, piorou ou passou do ponto.",
+    "5": "E guarda cada ajuste, pra loja não perder o que aprendeu.",
+    "6": "MANDACOR. A cor certa com menos tentativa. Chama no WhatsApp."
+  },
+  "curta": {
+    "1": "Acertar cor no olho?",
+    "3": "O MANDACOR lê os 5 ângulos e explica na língua da bancada.",
+    "4": "Avisa quando piorou ou passou do ponto.",
+    "5": "E guarda cada ajuste no histórico.",
+    "6": "MANDACOR. Chama no WhatsApp."
+  }
+}

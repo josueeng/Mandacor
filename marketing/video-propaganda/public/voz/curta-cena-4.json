@@ -1,0 +1,42 @@
+{
+  "texto": "Avisa quando piorou ou passou do ponto.",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "Avisa",
+      "inicio": 0.098,
+      "fim": 0.61
+    },
+    {
+      "texto": "quando",
+      "inicio": 0.621,
+      "fim": 0.859
+    },
+    {
+      "texto": "piorou",
+      "inicio": 0.871,
+      "fim": 1.205
+    },
+    {
+      "texto": "ou",
+      "inicio": 1.217,
+      "fim": 1.324
+    },
+    {
+      "texto": "passou",
+      "inicio": 1.336,
+      "fim": 1.717
+    },
+    {
+      "texto": "do",
+      "inicio": 1.729,
+      "fim": 1.836
+    },
+    {
+      "texto": "ponto",
+      "inicio": 1.848,
+      "fim": 2.229
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "texto": "Ajustou? Ele mede de novo e diz se melhorou, piorou ou passou do ponto.",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "Ajustou",
+      "inicio": 0.098,
+      "fim": 0.752
+    },
+    {
+      "texto": "Ele",
+      "inicio": 1.571,
+      "fim": 1.786
+    },
+    {
+      "texto": "mede",
+      "inicio": 1.798,
+      "fim": 2.143
+    },
+    {
+      "texto": "de",
+      "inicio": 2.155,
+      "fim": 2.238
+    },
+    {
+      "texto": "novo",
+      "inicio": 2.25,
+      "fim": 2.583
+    },
+    {
+      "texto": "e",
+      "inicio": 2.595,
+      "fim": 2.631
+    },
+    {
+      "texto": "diz",
+      "inicio": 2.643,
+      "fim": 2.881
+    },
+    {
+      "texto": "se",
+      "inicio": 2.893,
+      "fim": 2.976
+    },
+    {
+      "texto": "melhorou",
+      "inicio": 2.988,
+      "fim": 3.429
+    },
+    {
+      "texto": "piorou",
+      "inicio": 3.667,
+      "fim": 4.012
+    },
+    {
+      "texto": "ou",
+      "inicio": 4.024,
+      "fim": 4.143
+    },
+    {
+      "texto": "passou",
+      "inicio": 4.155,
+      "fim": 4.536
+    },
+    {
+      "texto": "do",
+      "inicio": 4.548,
+      "fim": 4.667
+    },
+    {
+      "texto": "ponto",
+      "inicio": 4.679,
+      "fim": 5.071
+    }
+  ]
+}

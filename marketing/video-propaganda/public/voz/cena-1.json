@@ -1,0 +1,37 @@
+{
+  "texto": "Quantas tentativas até acertar a cor?",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "Quantas",
+      "inicio": 0.098,
+      "fim": 0.514
+    },
+    {
+      "texto": "tentativas",
+      "inicio": 0.526,
+      "fim": 1.074
+    },
+    {
+      "texto": "até",
+      "inicio": 1.086,
+      "fim": 1.419
+    },
+    {
+      "texto": "acertar",
+      "inicio": 1.431,
+      "fim": 1.871
+    },
+    {
+      "texto": "a",
+      "inicio": 1.883,
+      "fim": 1.967
+    },
+    {
+      "texto": "cor",
+      "inicio": 1.979,
+      "fim": 2.24
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "texto": "O MANDACOR lê o espectrofotômetro e explica a diferença na língua da bancada.",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "O",
+      "inicio": 0.098,
+      "fim": 0.193
+    },
+    {
+      "texto": "MANDACOR",
+      "inicio": 0.205,
+      "fim": 0.836
+    },
+    {
+      "texto": "lê",
+      "inicio": 0.848,
+      "fim": 0.99
+    },
+    {
+      "texto": "o",
+      "inicio": 1.002,
+      "fim": 1.05
+    },
+    {
+      "texto": "espectrofotômetro",
+      "inicio": 1.062,
+      "fim": 2.062
+    },
+    {
+      "texto": "e",
+      "inicio": 2.074,
+      "fim": 2.098
+    },
+    {
+      "texto": "explica",
+      "inicio": 2.11,
+      "fim": 2.538
+    },
+    {
+      "texto": "a",
+      "inicio": 2.55,
+      "fim": 2.586
+    },
+    {
+      "texto": "diferença",
+      "inicio": 2.598,
+      "fim": 3.193
+    },
+    {
+      "texto": "na",
+      "inicio": 3.205,
+      "fim": 3.3
+    },
+    {
+      "texto": "língua",
+      "inicio": 3.312,
+      "fim": 3.61
+    },
+    {
+      "texto": "da",
+      "inicio": 3.621,
+      "fim": 3.705
+    },
+    {
+      "texto": "bancada",
+      "inicio": 3.717,
+      "fim": 4.24
+    }
+  ]
+}

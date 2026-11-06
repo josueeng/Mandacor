@@ -1,0 +1,27 @@
+{
+  "texto": "MANDACOR. Chama no WhatsApp.",
+  "voz": "pt-BR-AntonioNeural",
+  "taxa": "+5%",
+  "palavras": [
+    {
+      "texto": "MANDACOR",
+      "inicio": 0.098,
+      "fim": 0.729
+    },
+    {
+      "texto": "Chama",
+      "inicio": 1.548,
+      "fim": 1.905
+    },
+    {
+      "texto": "no",
+      "inicio": 1.917,
+      "fim": 2.012
+    },
+    {
+      "texto": "WhatsApp",
+      "inicio": 2.024,
+      "fim": 2.738
+    }
+  ]
+}
