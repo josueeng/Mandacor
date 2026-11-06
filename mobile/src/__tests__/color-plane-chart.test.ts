@@ -1,6 +1,7 @@
 import {
   COLOR_PLANE_LIMIT,
   colorPlaneScale,
+  formatTick,
   lightnessScale,
   numericTicks,
   projectColorPoint,
@@ -9,6 +10,10 @@ import {
 describe('ColorPlaneChart numeric scale', () => {
   it('creates symmetric numbers around target zero', () => {
     expect(numericTicks(2)).toEqual([-2, -1, 0, 1, 2]);
+  });
+
+  it('labels axis numbers in PT-BR without trailing zeros', () => {
+    expect(numericTicks(5).map(formatTick)).toEqual(['-5', '-2,5', '0', '+2,5', '+5']);
   });
 
   it('uses the professional base scale from -5 to +5 for ordinary deviations', () => {

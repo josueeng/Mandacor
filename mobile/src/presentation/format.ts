@@ -8,6 +8,7 @@ const directionPtBr: Record<string, string> = {
   YELLOWER: 'MAIS AMARELA',
   BLUER: 'MAIS AZUL',
   NEUTRAL: 'SEM DESVIO',
+  EQUAL: 'IGUAL AO ALVO',
   MIXED: 'MISTO',
 };
 

@@ -4,6 +4,7 @@ describe('presentation helpers', () => {
   test('maps backend enums to PT-BR without changing the source enum', () => {
     expect(presentDirection('DARKER')).toBe('MAIS ESCURA');
     expect(presentDirection('GREENER')).toBe('MAIS VERDE');
+    expect(presentDirection('EQUAL')).toBe('IGUAL AO ALVO');
     expect(presentAction('MOVE_BLUER')).toBe('AZULAR');
     expect(presentAction('MIXED')).toBe('MISTO');
   });

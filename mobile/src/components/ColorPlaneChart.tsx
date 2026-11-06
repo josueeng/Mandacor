@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { describeDeviation } from '@/src/presentation/format';
+import { describeDeviation, formatSigned } from '@/src/presentation/format';
 import { colors, radius, spacing } from '@/src/theme/tokens';
 import { LabAngle, REQUIRED_ANGLES, RequiredAngle } from '@/src/types/api';
 
@@ -21,9 +21,11 @@ export function numericTicks(scale: number): number[] {
   return [-scale, -scale / 2, 0, scale / 2, scale];
 }
 
-function formatTick(value: number): string {
+/** Axis number in PT-BR without trailing zeros: +2,5 and -5 instead of +2.50 and -5.00. */
+export function formatTick(value: number): string {
   if (value === 0) return '0';
-  return `${value > 0 ? '+' : ''}${value.toFixed(2)}`;
+  const digits = Number.isInteger(value) ? String(Math.abs(value)) : Math.abs(value).toFixed(1);
+  return `${value > 0 ? '+' : '-'}${digits.replace('.', ',')}`;
 }
 
 function adaptiveScale(...values: number[]): number {
@@ -112,7 +114,7 @@ export function ColorPlaneChart({
 
       <View style={styles.legend}>
         <LegendItem color={colors.action} label="T · AMOSTRA" />
-        <Text style={styles.scale}>ESCALA ±{scale.toFixed(2)}</Text>
+        <Text style={styles.scale}>ESCALA ±{formatTick(scale).slice(1)}</Text>
       </View>
     </View>
   );
@@ -134,7 +136,7 @@ function CartesianNumbers({ scale }: { scale: number }) {
               styles.xTickLabel,
               value < 0 ? styles.greenNumber : styles.redNumber,
               { left: `${position}%` },
-            ]}>
+            ]} numberOfLines={1}>
               {formatTick(value)}
             </Text>
           </Fragment>
@@ -151,7 +153,7 @@ function CartesianNumbers({ scale }: { scale: number }) {
               styles.yTickLabel,
               value < 0 ? styles.blueNumber : styles.yellowNumber,
               { top: `${position}%` },
-            ]}>
+            ]} numberOfLines={1}>
               {formatTick(value)}
             </Text>
           </Fragment>
@@ -221,7 +223,7 @@ function LightnessMarker({
   return (
     <View style={[styles.lightnessMarker, style, { left: `${position}%`, top }]}>
       <Text style={styles.lightnessMarkerLabel}>{label}</Text>
-      <Text style={styles.lightnessMarkerValue}>{value >= 0 ? '+' : ''}{value.toFixed(2)}</Text>
+      <Text style={styles.lightnessMarkerValue}>{formatSigned(value, 2).replace('.', ',')}</Text>
     </View>
   );
 }
@@ -327,10 +329,10 @@ const styles = StyleSheet.create({
     lineHeight: 12,
     position: 'absolute',
     textAlign: 'center',
-    width: 24,
+    width: 34,
   },
   xTickLabel: {
-    marginLeft: -12,
+    marginLeft: -17,
     marginTop: -6,
     top: '50%',
   },
@@ -345,7 +347,7 @@ const styles = StyleSheet.create({
   },
   yTickLabel: {
     left: '50%',
-    marginLeft: -12,
+    marginLeft: -17,
     marginTop: -6,
   },
   greenNumber: { color: '#52C685' },
